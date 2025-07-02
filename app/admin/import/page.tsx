@@ -28,7 +28,7 @@ export default function AdminImportPage() {
       }
 
       const frontmatter = frontmatterMatch[1]
-      const metadata: any = {}
+      const metadata: Record<string, string | string[]> = {}
 
       // タイトル
       const titleMatch = frontmatter.match(/title:\s*"([^"]+)"/)
@@ -76,8 +76,9 @@ export default function AdminImportPage() {
       metadata.content = content.replace(/^---[\s\S]*?---\n/, '')
 
       return metadata as ExtractedData
-    } catch (error: any) {
-      setStatus(`エラー: ${error.message}`)
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'メタデータの抽出に失敗しました'
+      setStatus(`エラー: ${errorMessage}`)
       return null
     }
   }
@@ -119,8 +120,9 @@ export default function AdminImportPage() {
       } else {
         setStatus(`❌ エラー: ${result.error}`)
       }
-    } catch (error: any) {
-      setStatus(`❌ エラー: ${error.message}`)
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'エラーが発生しました'
+      setStatus(`❌ エラー: ${errorMessage}`)
     } finally {
       setIsLoading(false)
     }

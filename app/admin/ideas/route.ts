@@ -86,10 +86,11 @@ export async function POST(request: NextRequest) {
       message: 'アイデアを保存しました'
     })
 
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error saving idea:', error)
+    const errorMessage = error instanceof Error ? error.message : '保存中にエラーが発生しました'
     return NextResponse.json(
-      { error: error.message || '保存中にエラーが発生しました' },
+      { error: errorMessage },
       { status: 500 }
     )
   }
