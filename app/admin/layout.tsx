@@ -22,6 +22,9 @@ export default function AdminLayout({
                 <Link href="/admin/ideas" className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
                   アイデア一覧
                 </Link>
+                <Link href="/admin/sheets" className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
+                  Sheets連携
+                </Link>
                 <Link href="/admin/import" className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
                   インポート
                 </Link>
