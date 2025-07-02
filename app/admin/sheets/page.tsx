@@ -1,124 +1,257 @@
-import { getAllIdeas } from '@/lib/mdx'
+'use client';
 
-export default async function AdminDashboard() {
-  const ideas = await getAllIdeas()
-  
-  // カテゴリ別の集計
-  const categoryCounts = ideas.reduce((acc, idea) => {
-    acc[idea.category] = (acc[idea.category] || 0) + 1
-    return acc
-  }, {} as Record<string, number>)
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
 
-  // タグの集計
-  const tagCounts = ideas.reduce((acc, idea) => {
-    idea.tags.forEach(tag => {
-      acc[tag] = (acc[tag] || 0) + 1
-    })
-    return acc
-  }, {} as Record<string, number>)
+interface IdeaRow {
+  id: string;
+  createdAt: string;
+  title: string;
+  category: string;
+  tags: string;
+  priceRange: string;
+  duration: string;
+  source: string;
+  status: string;
+  slug: string;
+  notes: string;
+}
 
-  const topTags = Object.entries(tagCounts)
-    .sort(([, a], [, b]) => b - a)
-    .slice(0, 10)
+export default function AdminSheetsPage() {
+  const [ideas, setIdeas] = useState<IdeaRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [syncing, setSyncing] = useState(false);
+
+  // アイデア一覧を取得
+  const fetchIdeas = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/sheets/ideas');
+      const data = await response.json();
+      
+      if (data.success) {
+        setIdeas(data.ideas);
+      } else {
+        setError('Failed to fetch ideas');
+      }
+    } catch (err) {
+      setError('Error connecting to Google Sheets');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchIdeas();
+  }, []);
+
+  // ステータスを更新
+  const updateStatus = async (id: string, newStatus: string) => {
+    try {
+      const response = await fetch('/api/sheets/ideas', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id,
+          status: newStatus,
+        }),
+      });
+
+      if (response.ok) {
+        // 成功したらリストを更新
+        await fetchIdeas();
+      }
+    } catch (err) {
+      console.error('Error updating status:', err);
+    }
+  };
+
+  // MDXファイルと同期（将来の実装用）
+  const syncWithMDX = async () => {
+    setSyncing(true);
+    // TODO: MDXファイルとの同期処理
+    setTimeout(() => {
+      setSyncing(false);
+      alert('同期機能は開発中です');
+    }, 1000);
+  };
+
+  if (loading) {
+    return (
+      <div className="p-6">
+        <h1 className="text-2xl font-bold mb-6">Google Sheets 連携</h1>
+        <p>読み込み中...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-6">
+        <h1 className="text-2xl font-bold mb-6">Google Sheets 連携</h1>
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+          {error}
+        </div>
+        <button
+          onClick={fetchIdeas}
+          className="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+        >
+          再試行
+        </button>
+      </div>
+    );
+  }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">ダッシュボード</h1>
-        <p className="mt-2 text-gray-600">アイデアの統計情報</p>
-      </div>
-
-      {/* 統計カード */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-white rounded-lg shadow-sm border p-6">
-          <h3 className="text-sm font-medium text-gray-500">総アイデア数</h3>
-          <p className="mt-2 text-3xl font-bold text-gray-900">{ideas.length}</p>
-          <p className="mt-1 text-sm text-gray-600">公開中のアイデア</p>
-        </div>
-        
-        <div className="bg-white rounded-lg shadow-sm border p-6">
-          <h3 className="text-sm font-medium text-gray-500">カテゴリ数</h3>
-          <p className="mt-2 text-3xl font-bold text-gray-900">{Object.keys(categoryCounts).length}</p>
-          <p className="mt-1 text-sm text-gray-600">種類のカテゴリ</p>
-        </div>
-        
-        <div className="bg-white rounded-lg shadow-sm border p-6">
-          <h3 className="text-sm font-medium text-gray-500">目標達成率</h3>
-          <p className="mt-2 text-3xl font-bold text-gray-900">{Math.round((ideas.length / 1000) * 100)}%</p>
-          <p className="mt-1 text-sm text-gray-600">1,000個目標</p>
+    <div className="p-6">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Google Sheets 連携</h1>
+        <div className="space-x-4">
+          <button
+            onClick={fetchIdeas}
+            className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+          >
+            更新
+          </button>
+          <button
+            onClick={syncWithMDX}
+            disabled={syncing}
+            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:opacity-50"
+          >
+            {syncing ? '同期中...' : 'MDXと同期'}
+          </button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* カテゴリ別 */}
-        <div className="bg-white rounded-lg shadow-sm border p-6">
-          <h2 className="text-lg font-semibold mb-4">カテゴリ別アイデア数</h2>
-          <div className="space-y-3">
-            {Object.entries(categoryCounts)
-              .sort(([, a], [, b]) => b - a)
-              .map(([category, count]) => (
-                <div key={category} className="flex items-center justify-between">
-                  <span className="text-gray-700">{category}</span>
-                  <div className="flex items-center gap-2">
-                    <div className="w-32 bg-gray-200 rounded-full h-2">
-                      <div 
-                        className="bg-blue-600 h-2 rounded-full"
-                        style={{ width: `${(count / ideas.length) * 100}%` }}
-                      />
-                    </div>
-                    <span className="text-sm text-gray-600 w-10 text-right">{count}</span>
-                  </div>
-                </div>
-              ))}
-          </div>
-        </div>
-
-        {/* 人気タグ */}
-        <div className="bg-white rounded-lg shadow-sm border p-6">
-          <h2 className="text-lg font-semibold mb-4">人気のタグ TOP10</h2>
-          <div className="flex flex-wrap gap-2">
-            {topTags.map(([tag, count]) => (
-              <span
-                key={tag}
-                className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm"
-              >
-                {tag} ({count})
-              </span>
+      <div className="bg-white shadow-md rounded-lg overflow-x-auto">
+        <table className="min-w-full">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                ID
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                作成日
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                タイトル
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                カテゴリ
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                タグ
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                価格帯
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                構築期間
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                元ネタ
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                ステータス
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                スラッグ
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                備考
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                アクション
+              </th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {ideas.map((idea) => (
+              <tr key={idea.id}>
+                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                  {idea.id}
+                </td>
+                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {idea.createdAt}
+                </td>
+                <td className="px-4 py-4 text-sm">
+                  <Link
+                    href={`/ideas/${idea.slug}`}
+                    className="text-blue-600 hover:text-blue-800"
+                    target="_blank"
+                  >
+                    {idea.title}
+                  </Link>
+                </td>
+                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {idea.category}
+                </td>
+                <td className="px-4 py-4 text-sm text-gray-500">
+                  {idea.tags}
+                </td>
+                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {idea.priceRange}
+                </td>
+                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {idea.duration}
+                </td>
+                <td className="px-4 py-4 text-sm text-gray-400 italic">
+                  {idea.source}
+                </td>
+                <td className="px-4 py-4 whitespace-nowrap">
+                  <select
+                    value={idea.status}
+                    onChange={(e) => updateStatus(idea.id, e.target.value)}
+                    className="text-sm rounded-md border-gray-300"
+                  >
+                    <option value="draft">下書き</option>
+                    <option value="published">公開</option>
+                    <option value="archived">アーカイブ</option>
+                  </select>
+                </td>
+                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {idea.slug}
+                </td>
+                <td className="px-4 py-4 text-sm text-gray-500">
+                  {idea.notes}
+                </td>
+                <td className="px-4 py-4 whitespace-nowrap text-sm font-medium">
+                  <Link
+                    href={`/admin/edit/${idea.slug}`}
+                    className="text-indigo-600 hover:text-indigo-900 pointer-events-none opacity-50"
+                  >
+                    編集
+                  </Link>
+                </td>
+              </tr>
             ))}
+          </tbody>
+        </table>
+        
+        {ideas.length === 0 && (
+          <div className="text-center py-8 text-gray-500">
+            アイデアがありません
           </div>
-        </div>
+        )}
       </div>
 
-      {/* クイックアクション */}
-      <div className="mt-8 bg-blue-50 rounded-lg p-6">
-        <h2 className="text-lg font-semibold mb-4">クイックアクション</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="mt-6 text-sm text-gray-600">
+        <p>合計: {ideas.length} 件のアイデア</p>
+        <p className="mt-2">
           <a
-            href="/admin/import"
-            className="block p-4 bg-white rounded-lg border hover:shadow-md transition-shadow text-center"
-          >
-            <div className="text-blue-600 font-semibold">新規アイデアをインポート</div>
-            <p className="text-sm text-gray-600 mt-1">ChatGPTで作成したMDXを追加</p>
-          </a>
-          
-          <a
-            href="/admin/ideas"
-            className="block p-4 bg-white rounded-lg border hover:shadow-md transition-shadow text-center"
-          >
-            <div className="text-blue-600 font-semibold">アイデア一覧を見る</div>
-            <p className="text-sm text-gray-600 mt-1">すべてのアイデアを管理</p>
-          </a>
-          
-          <a
-            href="/"
+            href={`https://docs.google.com/spreadsheets/d/${process.env.NEXT_PUBLIC_GOOGLE_SHEETS_ID || '12zYI6DhYg1Yw6xCw2cbBifwFu4_iMsql9DuNMXPN4DI'}/edit`}
             target="_blank"
-            className="block p-4 bg-white rounded-lg border hover:shadow-md transition-shadow text-center"
+            rel="noopener noreferrer"
+            className="text-blue-600 hover:text-blue-800"
           >
-            <div className="text-blue-600 font-semibold">公開サイトを確認</div>
-            <p className="text-sm text-gray-600 mt-1">実際の表示を確認</p>
+            Google Sheetsで開く →
           </a>
-        </div>
+        </p>
       </div>
     </div>
-  )
+  );
 }
