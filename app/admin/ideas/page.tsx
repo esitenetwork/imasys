@@ -1,8 +1,22 @@
-import { getAllIdeas } from '@/lib/mdx'
+import { supabaseAdmin } from '@/lib/supabase'
 import Link from 'next/link'
 
 export default async function AdminIdeasPage() {
-  const ideas = await getAllIdeas()
+  // データ取得部分のみ変更
+  const { data: ideasData } = await supabaseAdmin
+    .from('ideas')
+    .select('*')
+    .order('created_at', { ascending: false })
+
+  // MDXと同じ形式に変換
+  const ideas = ideasData?.map(idea => ({
+    slug: idea.slug,
+    title: idea.title,
+    category: idea.category || '',
+    price: idea.price_range || '',
+    tags: idea.tags ? idea.tags.split(',').map(t => t.trim()) : [],
+    source: idea.source
+  })) || []
   
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -12,7 +26,7 @@ export default async function AdminIdeasPage() {
           <p className="mt-2 text-gray-600">現在 {ideas.length} 個のアイデアが登録されています</p>
         </div>
         <Link
-          href="/admin/import"
+          href="/admin/ideas/new"
           className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
         >
           新規追加
@@ -51,6 +65,9 @@ export default async function AdminIdeasPage() {
                     <div className="text-sm text-gray-500">
                       {idea.slug}
                     </div>
+                    <div className="text-xs text-gray-400">
+                      元ネタ: {idea.source || '未設定'}
+                    </div>
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
@@ -86,13 +103,12 @@ export default async function AdminIdeasPage() {
                   >
                     表示
                   </Link>
-                  <button
-                    className="text-gray-400 cursor-not-allowed"
-                    disabled
-                    title="編集機能は準備中です"
+                  <Link
+                    href={`/admin/ideas/${idea.slug}/edit`}
+                    className="text-indigo-600 hover:text-indigo-900"
                   >
                     編集
-                  </button>
+                  </Link>
                 </td>
               </tr>
             ))}
@@ -100,18 +116,6 @@ export default async function AdminIdeasPage() {
         </table>
       </div>
 
-      {/* 元ネタ情報（管理画面のみ表示） */}
-      <div className="mt-8 bg-yellow-50 rounded-lg p-6">
-        <h2 className="text-lg font-semibold mb-4">元ネタ情報（内部用）</h2>
-        <div className="space-y-2 text-sm">
-          {ideas.map((idea) => (
-            <div key={idea.slug} className="flex">
-              <span className="font-medium w-1/3">{idea.title}:</span>
-              <span className="text-gray-600">{idea.source || '未設定'}</span>
-            </div>
-          ))}
-        </div>
-      </div>
     </div>
   )
 }
