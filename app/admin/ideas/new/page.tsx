@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { supabase } from '@/lib/supabase'
+import { syncAfterSave, showSyncResult } from '@/lib/syncUtils'
+import { parseMDXContent, generateSlugFromTitle } from '@/lib/mdxParser'
 
 export default function NewIdeaPage() {
   const router = useRouter()
@@ -20,11 +21,13 @@ export default function NewIdeaPage() {
     mdx_content: ''
   })
 
+  // 英数字のみのスラッグ生成
   const generateSlug = (title: string) => {
     return title
       .toLowerCase()
-      .replace(/[^a-z0-9ぁ-んァ-ヶー一-龠]+/g, '-')
-      .replace(/^-+|-+$/g, '')
+      .replace(/[^a-z0-9]+/g, '-')  // 英数字以外を-に変換
+      .replace(/^-+|-+$/g, '')      // 前後の-を削除
+      .substring(0, 50)             // 長さ制限
   }
 
   const handleTitleChange = (title: string) => {
@@ -35,46 +38,98 @@ export default function NewIdeaPage() {
     })
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  // MDXコンテンツが変更されたときの処理
+  const handleMDXContentChange = (mdxContent: string) => {
+    try {
+      // MDXフロントマターを解析
+      const parsedData = parseMDXContent(mdxContent)
+      
+      // 解析したデータで右側のフィールドを更新
+      setIdea({
+        ...idea,
+        mdx_content: mdxContent,
+        title: parsedData.title || idea.title,
+        category: parsedData.category || idea.category,
+        tags: parsedData.tags || idea.tags,
+        price_range: parsedData.price || idea.price_range,
+        duration: parsedData.duration || idea.duration,
+        source: parsedData.source || idea.source,
+        slug: parsedData.title ? generateSlugFromTitle(parsedData.title) : idea.slug,
+        notes: parsedData.description || idea.notes
+      })
+    } catch (error) {
+      console.error('MDX parsing error:', error)
+      // エラーの場合はMDXコンテンツのみ更新
+      setIdea({
+        ...idea,
+        mdx_content: mdxContent
+      })
+    }
+  }
+
+  // フォーム送信処理（ステータス付き）
+  const handleSubmit = async (status: 'draft' | 'published') => {
     setSaving(true)
 
     try {
-      // スラッグの重複チェック
-      const { data: existing } = await supabase
-        .from('ideas')
-        .select('slug')
-        .eq('slug', idea.slug)
-        .single()
+      console.log('Submitting idea with data:', {
+        title: idea.title,
+        category: idea.category,
+        tags: idea.tags,
+        price_range: idea.price_range,
+        duration: idea.duration,
+        source: idea.source,
+        status: status,
+        slug: idea.slug,
+        notes: idea.notes,
+        mdx_content: idea.mdx_content ? idea.mdx_content.substring(0, 100) + '...' : ''
+      })
 
-      if (existing) {
-        alert('このスラッグは既に使用されています。タイトルを変更してください。')
-        setSaving(false)
-        return
+      // API Route経由でアイデアを保存
+      const insertData = {
+        title: idea.title,
+        category: idea.category,
+        tags: idea.tags,
+        price_range: idea.price_range,
+        duration: idea.duration,
+        source: idea.source,
+        status: status,
+        slug: idea.slug,
+        notes: idea.notes,
+        mdx_content: idea.mdx_content
       }
 
-      const { error } = await supabase
-        .from('ideas')
-        .insert({
-          title: idea.title,
-          category: idea.category,
-          tags: idea.tags,
-          price_range: idea.price_range,
-          duration: idea.duration,
-          source: idea.source,
-          status: idea.status,
-          slug: idea.slug,
-          notes: idea.notes,
-          mdx_content: idea.mdx_content
-        })
+      console.log('Sending data to API:', insertData)
 
-      if (error) throw error
+      const response = await fetch('/api/admin/ideas', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(insertData)
+      })
 
-      alert('アイデアを追加しました')
+      const result = await response.json()
+
+      if (!response.ok || !result.success) {
+        console.error('API error:', result)
+        throw new Error(result.error || 'API request failed')
+      }
+
+      console.log('API success:', result)
+
+      // 自動同期を実行
+      const syncResult = await syncAfterSave(idea, 'create')
+      
+      // 結果を通知
+      showSyncResult(syncResult)
+      
+      // 一覧画面に戻る
       router.push('/admin/ideas')
     } catch (error) {
       console.error('Error creating idea:', error)
-      alert('追加に失敗しました')
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+      alert(`追加に失敗しました: ${errorMessage}`)
     } finally {
       setSaving(false)
     }
@@ -84,218 +139,224 @@ export default function NewIdeaPage() {
     <div className="max-w-7xl mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold mb-6">新規アイデアを追加</h1>
       
-      <form onSubmit={handleSubmit}>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* 左カラム - MDXコンテンツ */}
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                MDXコンテンツ <span className="text-red-500">*</span>
-              </label>
-              <textarea
-                value={idea.mdx_content}
-                onChange={(e) => setIdea({ ...idea, mdx_content: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md font-mono text-sm"
-                rows={30}
-                required
-                placeholder={`---
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* 左カラム - MDXコンテンツ */}
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              MDXコンテンツ <span className="text-red-500">*</span>
+            </label>
+            <textarea
+              value={idea.mdx_content}
+              onChange={(e) => handleMDXContentChange(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md font-mono text-sm"
+              rows={30}
+              required
+              placeholder={`---
 title: "アイデアのタイトル"
+description: "システムの説明"
 category: "カテゴリ"
 tags: ["タグ1", "タグ2"]
-price: "30万円〜"
-duration: "2週間"
+price: "初期費用 30万円〜"
+duration: "構築期間 2週間"
+source: "n8n #949"
 ---
 
-## 解決できる課題
+## こんなお悩みありませんか？
 
-このシステムで解決できる課題を記述
+- 課題1
+- 課題2
 
-## 解決策の概要
+## 解決策
 
-どのように課題を解決するかを記述
+解決策の概要を記述
 
 ## 主な機能
 
 - 機能1
 - 機能2
-- 機能3
 
 ## 導入効果
 
 - 効果1
-- 効果2
-- 効果3
+- 効果2`}
+            />
+          </div>
+          
+          {/* 保存ボタン */}
+          <div className="flex gap-4">
+            <button
+              type="button"
+              onClick={() => handleSubmit('draft')}
+              disabled={saving || !idea.title || !idea.mdx_content}
+              className="px-6 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 disabled:opacity-50 flex items-center gap-2"
+            >
+              {saving && (
+                <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
+              )}
+              下書き保存
+            </button>
+            <button
+              type="button"
+              onClick={() => handleSubmit('published')}
+              disabled={saving || !idea.title || !idea.mdx_content}
+              className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
+            >
+              {saving && (
+                <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
+              )}
+              公開する
+            </button>
+            <button
+              type="button"
+              onClick={() => router.push('/admin/ideas')}
+              disabled={saving}
+              className="px-6 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 disabled:opacity-50"
+            >
+              キャンセル
+            </button>
+          </div>
 
-## 使用技術
-
-- 技術1
-- 技術2`}
-              />
+          {saving && (
+            <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded-md">
+              <div className="flex items-center gap-2">
+                <div className="animate-spin w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full"></div>
+                <span>API経由で保存中...</span>
+              </div>
+              <div className="mt-2">保存完了後、Google Sheetsに自動同期します</div>
             </div>
-            
-            <div className="flex gap-4">
-              <button
-                type="submit"
-                disabled={saving}
-                className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+          )}
+        </div>
+
+        {/* 右カラム - その他の情報 */}
+        <div className="space-y-4">
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              タイトル <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={idea.title}
+              onChange={(e) => handleTitleChange(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              カテゴリ
+            </label>
+            <select
+              value={idea.category}
+              onChange={(e) => setIdea({ ...idea, category: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+            >
+              <option value="">選択してください</option>
+              <option value="営業・販売">営業・販売</option>
+              <option value="経理・会計">経理・会計</option>
+              <option value="在庫・物流">在庫・物流</option>
+              <option value="顧客管理">顧客管理</option>
+              <option value="マーケティング">マーケティング</option>
+              <option value="人事・労務">人事・労務</option>
+              <option value="製造・生産">製造・生産</option>
+              <option value="カスタマーサポート">カスタマーサポート</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              タグ（カンマ区切り）
+            </label>
+            <input
+              type="text"
+              value={idea.tags}
+              onChange={(e) => setIdea({ ...idea, tags: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              placeholder="AI活用, 自動化, リアルタイム"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                価格帯
+              </label>
+              <select
+                value={idea.price_range}
+                onChange={(e) => setIdea({ ...idea, price_range: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md"
               >
-                {saving ? '追加中...' : '追加する'}
-              </button>
-              <button
-                type="button"
-                onClick={() => router.push('/admin/ideas')}
-                className="px-6 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"
+                <option value="">選択してください</option>
+                <option value="10万円〜">10万円〜</option>
+                <option value="30万円〜">30万円〜</option>
+                <option value="50万円〜">50万円〜</option>
+                <option value="100万円〜">100万円〜</option>
+                <option value="要相談">要相談</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                構築期間
+              </label>
+              <select
+                value={idea.duration}
+                onChange={(e) => setIdea({ ...idea, duration: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md"
               >
-                キャンセル
-              </button>
+                <option value="">選択してください</option>
+                <option value="1週間">1週間</option>
+                <option value="2週間">2週間</option>
+                <option value="3週間">3週間</option>
+                <option value="1ヶ月">1ヶ月</option>
+                <option value="2ヶ月">2ヶ月</option>
+                <option value="要相談">要相談</option>
+              </select>
             </div>
           </div>
 
-          {/* 右カラム - その他の情報 */}
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                タイトル <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={idea.title}
-                onChange={(e) => handleTitleChange(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                required
-              />
-            </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              元ネタ（内部用）
+            </label>
+            <input
+              type="text"
+              value={idea.source}
+              onChange={(e) => setIdea({ ...idea, source: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              placeholder="n8n #949, Zapier template, GitHub project等"
+            />
+          </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  カテゴリ
-                </label>
-                <select
-                  value={idea.category}
-                  onChange={(e) => setIdea({ ...idea, category: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                >
-                  <option value="">選択してください</option>
-                  <option value="営業・販売">営業・販売</option>
-                  <option value="経理・会計">経理・会計</option>
-                  <option value="在庫・物流">在庫・物流</option>
-                  <option value="顧客管理">顧客管理</option>
-                  <option value="マーケティング">マーケティング</option>
-                  <option value="人事・労務">人事・労務</option>
-                  <option value="製造・生産">製造・生産</option>
-                  <option value="カスタマーサポート">カスタマーサポート</option>
-                </select>
-              </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              スラッグ（URL用） <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={idea.slug}
+              onChange={(e) => setIdea({ ...idea, slug: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              required
+            />
+            <p className="text-sm text-gray-500 mt-1">英数字のみでタイトルから自動生成されます。必要に応じて編集してください。</p>
+          </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  ステータス
-                </label>
-                <select
-                  value={idea.status}
-                  onChange={(e) => setIdea({ ...idea, status: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                >
-                  <option value="draft">下書き</option>
-                  <option value="published">公開</option>
-                </select>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                タグ（カンマ区切り）
-              </label>
-              <input
-                type="text"
-                value={idea.tags}
-                onChange={(e) => setIdea({ ...idea, tags: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                placeholder="AI活用, 自動化, リアルタイム"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  価格帯
-                </label>
-                <select
-                  value={idea.price_range}
-                  onChange={(e) => setIdea({ ...idea, price_range: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                >
-                  <option value="">選択してください</option>
-                  <option value="10万円〜">10万円〜</option>
-                  <option value="30万円〜">30万円〜</option>
-                  <option value="50万円〜">50万円〜</option>
-                  <option value="100万円〜">100万円〜</option>
-                  <option value="要相談">要相談</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  構築期間
-                </label>
-                <select
-                  value={idea.duration}
-                  onChange={(e) => setIdea({ ...idea, duration: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                >
-                  <option value="">選択してください</option>
-                  <option value="1週間">1週間</option>
-                  <option value="2週間">2週間</option>
-                  <option value="3週間">3週間</option>
-                  <option value="1ヶ月">1ヶ月</option>
-                  <option value="2ヶ月">2ヶ月</option>
-                  <option value="要相談">要相談</option>
-                </select>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                元ネタ（内部用）
-              </label>
-              <input
-                type="text"
-                value={idea.source}
-                onChange={(e) => setIdea({ ...idea, source: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                placeholder="n8n #949, Zapier template, GitHub project等"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                スラッグ（URL用） <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={idea.slug}
-                onChange={(e) => setIdea({ ...idea, slug: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                required
-              />
-              <p className="text-sm text-gray-500 mt-1">タイトルから自動生成されます。必要に応じて編集してください。</p>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                備考
-              </label>
-              <textarea
-                value={idea.notes}
-                onChange={(e) => setIdea({ ...idea, notes: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                rows={3}
-              />
-            </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              備考
+            </label>
+            <textarea
+              value={idea.notes}
+              onChange={(e) => setIdea({ ...idea, notes: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              rows={3}
+            />
           </div>
         </div>
-      </form>
+      </div>
     </div>
   )
 }
