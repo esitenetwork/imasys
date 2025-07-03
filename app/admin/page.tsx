@@ -1,21 +1,60 @@
-import { getAllIdeas } from '@/lib/mdx'
+import { supabase } from '@/lib/supabase'
+import Link from 'next/link'
+
+// Supabaseから取得するアイデアの型定義
+interface Idea {
+  id: number
+  created_at: string
+  title: string
+  category: string | null
+  tags: string | null
+  price_range: string | null
+  duration: string | null
+  source: string | null
+  status: string
+  slug: string
+  notes: string | null
+  mdx_content: string
+  updated_at: string
+}
 
 export default async function AdminDashboard() {
-  const ideas = await getAllIdeas()
+  // Supabaseからアイデアを取得
+  const { data: ideas, error } = await supabase
+    .from('ideas')
+    .select('*')
+    .eq('status', 'published')
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    console.error('Error fetching ideas:', error)
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-red-600">エラーが発生しました: {error.message}</div>
+      </div>
+    )
+  }
+
+  const ideasData: Idea[] = ideas || []
   
   // カテゴリ別の集計
-  const categoryCounts = ideas.reduce((acc, idea) => {
-    acc[idea.category] = (acc[idea.category] || 0) + 1
-    return acc
-  }, {} as Record<string, number>)
+  const categoryCounts: Record<string, number> = {}
+  ideasData.forEach(idea => {
+    if (idea.category) {
+      categoryCounts[idea.category] = (categoryCounts[idea.category] || 0) + 1
+    }
+  })
 
   // タグの集計
-  const tagCounts = ideas.reduce((acc, idea) => {
-    idea.tags.forEach(tag => {
-      acc[tag] = (acc[tag] || 0) + 1
-    })
-    return acc
-  }, {} as Record<string, number>)
+  const tagCounts: Record<string, number> = {}
+  ideasData.forEach(idea => {
+    if (idea.tags) {
+      const tags = idea.tags.split(',').map(tag => tag.trim()).filter(Boolean)
+      tags.forEach(tag => {
+        tagCounts[tag] = (tagCounts[tag] || 0) + 1
+      })
+    }
+  })
 
   const topTags = Object.entries(tagCounts)
     .sort(([, a], [, b]) => b - a)
@@ -32,7 +71,7 @@ export default async function AdminDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div className="bg-white rounded-lg shadow-sm border p-6">
           <h3 className="text-sm font-medium text-gray-500">総アイデア数</h3>
-          <p className="mt-2 text-3xl font-bold text-gray-900">{ideas.length}</p>
+          <p className="mt-2 text-3xl font-bold text-gray-900">{ideasData.length}</p>
           <p className="mt-1 text-sm text-gray-600">公開中のアイデア</p>
         </div>
         
@@ -44,7 +83,7 @@ export default async function AdminDashboard() {
         
         <div className="bg-white rounded-lg shadow-sm border p-6">
           <h3 className="text-sm font-medium text-gray-500">目標達成率</h3>
-          <p className="mt-2 text-3xl font-bold text-gray-900">{Math.round((ideas.length / 1000) * 100)}%</p>
+          <p className="mt-2 text-3xl font-bold text-gray-900">{Math.round((ideasData.length / 1000) * 100)}%</p>
           <p className="mt-1 text-sm text-gray-600">1,000個目標</p>
         </div>
       </div>
@@ -63,7 +102,7 @@ export default async function AdminDashboard() {
                     <div className="w-32 bg-gray-200 rounded-full h-2">
                       <div 
                         className="bg-blue-600 h-2 rounded-full"
-                        style={{ width: `${(count / ideas.length) * 100}%` }}
+                        style={{ width: `${(count / ideasData.length) * 100}%` }}
                       />
                     </div>
                     <span className="text-sm text-gray-600 w-10 text-right">{count}</span>
@@ -93,21 +132,21 @@ export default async function AdminDashboard() {
       <div className="mt-8 bg-blue-50 rounded-lg p-6">
         <h2 className="text-lg font-semibold mb-4">クイックアクション</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <a
-            href="/admin/import"
+          <Link
+            href="/admin/ideas/new"
             className="block p-4 bg-white rounded-lg border hover:shadow-md transition-shadow text-center"
           >
-            <div className="text-blue-600 font-semibold">新規アイデアをインポート</div>
-            <p className="text-sm text-gray-600 mt-1">ChatGPTで作成したMDXを追加</p>
-          </a>
+            <div className="text-blue-600 font-semibold">新規アイデアを追加</div>
+            <p className="text-sm text-gray-600 mt-1">ChatGPTで作成したアイデアを登録</p>
+          </Link>
           
-          <a
+          <Link
             href="/admin/ideas"
             className="block p-4 bg-white rounded-lg border hover:shadow-md transition-shadow text-center"
           >
             <div className="text-blue-600 font-semibold">アイデア一覧を見る</div>
             <p className="text-sm text-gray-600 mt-1">すべてのアイデアを管理</p>
-          </a>
+          </Link>
           
           <a
             href="/"

@@ -1,6 +1,26 @@
 import { supabaseAdmin } from '@/lib/supabase'
 import Link from 'next/link'
 
+// 型定義を追加
+interface IdeaData {
+  slug: string;
+  title: string;
+  category?: string;
+  price_range?: string;
+  tags?: string;
+  source?: string;
+  created_at: string;
+}
+
+interface ProcessedIdea {
+  slug: string;
+  title: string;
+  category: string;
+  price: string;
+  tags: string[];
+  source?: string;
+}
+
 export default async function AdminIdeasPage() {
   // データ取得部分のみ変更
   const { data: ideasData } = await supabaseAdmin
@@ -8,14 +28,14 @@ export default async function AdminIdeasPage() {
     .select('*')
     .order('created_at', { ascending: false })
 
-  // MDXと同じ形式に変換
-  const ideas = ideasData?.map(idea => ({
-    slug: idea.slug,
-    title: idea.title,
-    category: idea.category || '',
-    price: idea.price_range || '',
-    tags: idea.tags ? idea.tags.split(',').map(t => t.trim()) : [],
-    source: idea.source
+  // MDXと同じ形式に変換（型を明示的に指定）
+  const ideas: ProcessedIdea[] = (ideasData as IdeaData[])?.map((ideaItem: IdeaData) => ({
+    slug: ideaItem.slug,
+    title: ideaItem.title,
+    category: ideaItem.category || '',
+    price: ideaItem.price_range || '',
+    tags: ideaItem.tags ? ideaItem.tags.split(',').map((tagItem: string) => tagItem.trim()) : [],
+    source: ideaItem.source
   })) || []
   
   return (
@@ -55,56 +75,56 @@ export default async function AdminIdeasPage() {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {ideas.map((idea) => (
-              <tr key={idea.slug} className="hover:bg-gray-50">
+            {ideas.map((ideaRow: ProcessedIdea) => (
+              <tr key={ideaRow.slug} className="hover:bg-gray-50">
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div>
                     <div className="text-sm font-medium text-gray-900">
-                      {idea.title}
+                      {ideaRow.title}
                     </div>
                     <div className="text-sm text-gray-500">
-                      {idea.slug}
+                      {ideaRow.slug}
                     </div>
                     <div className="text-xs text-gray-400">
-                      元ネタ: {idea.source || '未設定'}
+                      元ネタ: {ideaRow.source || '未設定'}
                     </div>
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                    {idea.category}
+                    {ideaRow.category}
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {idea.price}
+                  {ideaRow.price}
                 </td>
                 <td className="px-6 py-4">
                   <div className="flex flex-wrap gap-1">
-                    {idea.tags.slice(0, 3).map((tag) => (
+                    {ideaRow.tags.slice(0, 3).map((tagElement: string) => (
                       <span
-                        key={tag}
+                        key={tagElement}
                         className="px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded"
                       >
-                        {tag}
+                        {tagElement}
                       </span>
                     ))}
-                    {idea.tags.length > 3 && (
+                    {ideaRow.tags.length > 3 && (
                       <span className="text-xs text-gray-500">
-                        +{idea.tags.length - 3}
+                        +{ideaRow.tags.length - 3}
                       </span>
                     )}
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <Link
-                    href={`/ideas/${idea.slug}`}
+                    href={`/ideas/${ideaRow.slug}`}
                     target="_blank"
                     className="text-blue-600 hover:text-blue-900 mr-3"
                   >
                     表示
                   </Link>
                   <Link
-                    href={`/admin/ideas/${idea.slug}/edit`}
+                    href={`/admin/ideas/${ideaRow.slug}/edit`}
                     className="text-indigo-600 hover:text-indigo-900"
                   >
                     編集
