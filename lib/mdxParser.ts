@@ -2,6 +2,7 @@
 
 export interface ParsedMDXData {
   title: string;
+  slug?: string;
   description?: string;
   category: string;
   tags: string;
@@ -90,6 +91,10 @@ export function parseMDXContent(mdxContent: string): ParsedMDXData {
   const titleMatch = frontmatter.match(/title:\s*["']([^"']+)["']/);
   if (titleMatch) data.title = titleMatch[1];
 
+  // slugフィールドを追加
+  const slugMatch = frontmatter.match(/slug:\s*["']([^"']+)["']/);
+  if (slugMatch) data.slug = slugMatch[1];
+
   const descriptionMatch = frontmatter.match(/description:\s*["']([^"']+)["']/);
   if (descriptionMatch) data.description = descriptionMatch[1];
 
@@ -134,6 +139,7 @@ export function parseMDXContent(mdxContent: string): ParsedMDXData {
 
   return {
     title: data.title || '',
+    slug: data.slug || '',
     description: data.description || '',
     category: data.category || '',
     tags: data.tags || '',
@@ -145,10 +151,11 @@ export function parseMDXContent(mdxContent: string): ParsedMDXData {
   };
 }
 
-// スラッグ生成関数
+// 英数字のみのスラッグ生成関数（MDXでslugが指定されていない場合のフォールバック）
 export function generateSlugFromTitle(title: string): string {
   return title
     .toLowerCase()
-    .replace(/[^a-z0-9ぁ-んァ-ヶー一-龠]+/g, '-')
-    .replace(/^-+|-+$/g, '');
+    .replace(/[^a-z0-9]+/g, '-')  // 英数字以外を-に変換
+    .replace(/^-+|-+$/g, '')      // 前後の-を削除
+    .substring(0, 50);            // 長さ制限
 }

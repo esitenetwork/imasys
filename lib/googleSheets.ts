@@ -149,6 +149,51 @@ export async function updateIdeaInSheet(id: string, updates: Partial<IdeaRow>): 
   }
 }
 
+// スプレッドシートから特定のアイデアを削除
+export async function deleteIdeaFromSheet(slug: string): Promise<boolean> {
+  try {
+    console.log('Deleting idea with slug:', slug);
+
+    const ideas = await getIdeasFromSheet();
+    const rowIndex = ideas.findIndex(idea => idea.slug === slug);
+    
+    if (rowIndex === -1) {
+      console.error('Idea not found with slug:', slug);
+      return false;
+    }
+
+    // 削除する行番号（ヘッダー行を考慮して+2）
+    const rowNumber = rowIndex + 2;
+    
+    console.log('Deleting row:', rowNumber);
+
+    // Google Sheets APIで行を削除
+    await sheets.spreadsheets.batchUpdate({
+      spreadsheetId: SPREADSHEET_ID,
+      requestBody: {
+        requests: [
+          {
+            deleteDimension: {
+              range: {
+                sheetId: 0, // 最初のシート
+                dimension: 'ROWS',
+                startIndex: rowNumber - 1, // 0ベースのインデックス
+                endIndex: rowNumber, // 終了インデックス（排他的）
+              },
+            },
+          },
+        ],
+      },
+    });
+
+    console.log('Successfully deleted row:', rowNumber);
+    return true;
+  } catch (error) {
+    console.error('Error deleting idea from Google Sheets:', error);
+    return false;
+  }
+}
+
 // ステータスでフィルタリング
 export async function getIdeasByStatus(status: string): Promise<IdeaRow[]> {
   const ideas = await getIdeasFromSheet();

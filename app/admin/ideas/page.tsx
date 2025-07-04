@@ -125,7 +125,7 @@ export default function AdminIdeasPage() {
         <table className="w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4">
                 タイトル
               </th>
               <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -148,15 +148,15 @@ export default function AdminIdeasPage() {
           <tbody className="bg-white divide-y divide-gray-200">
             {ideas.map((ideaRow: ProcessedIdea) => (
               <tr key={ideaRow.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 text-left">
-                  <div>
-                    <div className="text-sm font-medium text-gray-900">
+                <td className="px-6 py-4 text-left w-1/4">
+                  <div className="max-w-xs">
+                    <div className="text-sm font-medium text-gray-900 truncate">
                       {ideaRow.title}
                     </div>
-                    <div className="text-sm text-gray-500">
+                    <div className="text-sm text-gray-500 truncate">
                       {ideaRow.slug}
                     </div>
-                    <div className="text-xs text-gray-400">
+                    <div className="text-xs text-gray-400 truncate">
                       元ネタ: {ideaRow.source || '未設定'}
                     </div>
                   </div>

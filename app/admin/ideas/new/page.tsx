@@ -8,6 +8,7 @@ import { parseMDXContent, generateSlugFromTitle } from '@/lib/mdxParser'
 export default function NewIdeaPage() {
   const router = useRouter()
   const [saving, setSaving] = useState(false)
+  const [savingDraft, setSavingDraft] = useState(false)
   const [idea, setIdea] = useState({
     title: '',
     category: '',
@@ -54,7 +55,7 @@ export default function NewIdeaPage() {
         price_range: parsedData.price || idea.price_range,
         duration: parsedData.duration || idea.duration,
         source: parsedData.source || idea.source,
-        slug: parsedData.title ? generateSlugFromTitle(parsedData.title) : idea.slug,
+        slug: parsedData.slug || (parsedData.title ? generateSlugFromTitle(parsedData.title) : idea.slug),
         notes: parsedData.description || idea.notes
       })
     } catch (error) {
@@ -69,7 +70,11 @@ export default function NewIdeaPage() {
 
   // フォーム送信処理（ステータス付き）
   const handleSubmit = async (status: 'draft' | 'published') => {
-    setSaving(true)
+    if (status === 'draft') {
+      setSavingDraft(true)
+    } else {
+      setSaving(true)
+    }
 
     try {
       console.log('Submitting idea with data:', {
@@ -132,6 +137,7 @@ export default function NewIdeaPage() {
       alert(`追加に失敗しました: ${errorMessage}`)
     } finally {
       setSaving(false)
+      setSavingDraft(false)
     }
   }
 
@@ -188,10 +194,10 @@ source: "n8n #949"
             <button
               type="button"
               onClick={() => handleSubmit('draft')}
-              disabled={saving || !idea.title || !idea.mdx_content}
+              disabled={savingDraft || saving || !idea.title || !idea.mdx_content}
               className="px-6 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 disabled:opacity-50 flex items-center gap-2"
             >
-              {saving && (
+              {savingDraft && (
                 <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
               )}
               下書き保存
@@ -199,7 +205,7 @@ source: "n8n #949"
             <button
               type="button"
               onClick={() => handleSubmit('published')}
-              disabled={saving || !idea.title || !idea.mdx_content}
+              disabled={saving || savingDraft || !idea.title || !idea.mdx_content}
               className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
             >
               {saving && (
@@ -210,22 +216,13 @@ source: "n8n #949"
             <button
               type="button"
               onClick={() => router.push('/admin/ideas')}
-              disabled={saving}
+              disabled={saving || savingDraft}
               className="px-6 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 disabled:opacity-50"
             >
               キャンセル
             </button>
           </div>
 
-          {saving && (
-            <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded-md">
-              <div className="flex items-center gap-2">
-                <div className="animate-spin w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full"></div>
-                <span>API経由で保存中...</span>
-              </div>
-              <div className="mt-2">保存完了後、Google Sheetsに自動同期します</div>
-            </div>
-          )}
         </div>
 
         {/* 右カラム - その他の情報 */}

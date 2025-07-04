@@ -1,14 +1,21 @@
 import { NextResponse } from 'next/server';
-import { getIdeasFromSheet, addIdeaToSheet, updateIdeaInSheet } from '@/lib/googleSheets';
+import { getIdeasFromSheet, addIdeaToSheet, updateIdeaInSheet, deleteIdeaFromSheet } from '@/lib/googleSheets';
 import { supabaseAdmin } from '@/lib/supabase';
 import type { IdeaRecord } from '@/lib/supabase';
 import type { IdeaRow } from '@/lib/googleSheets';
 
-// Google Sheets → Supabase 同期
+// Google Sheets同期API
 export async function POST(request: Request) {
   try {
-    const { direction } = await request.json();
+    const body = await request.json();
+    const { direction, action, idea } = body;
     
+    // 削除処理
+    if (action === 'delete' && idea) {
+      return await deleteIdeaFromSheets(idea);
+    }
+    
+    // 同期処理
     if (direction === 'sheets-to-supabase') {
       return await syncSheetsToSupabase();
     } else if (direction === 'supabase-to-sheets') {
@@ -56,6 +63,36 @@ export async function GET() {
     console.error('Error getting sync status:', error);
     return NextResponse.json(
       { error: 'Failed to get sync status' },
+      { status: 500 }
+    );
+  }
+}
+
+// Google Sheetsから削除
+async function deleteIdeaFromSheets(idea: any) {
+  try {
+    console.log('Deleting idea from Google Sheets:', idea.slug);
+
+    // Google Sheetsから該当アイデアを削除
+    const success = await deleteIdeaFromSheet(idea.slug);
+
+    if (success) {
+      return NextResponse.json({
+        success: true,
+        action: 'delete',
+        message: `Idea "${idea.title}" deleted from Google Sheets`,
+        deletedSlug: idea.slug
+      });
+    } else {
+      return NextResponse.json(
+        { error: 'Failed to delete idea from Google Sheets', success: false },
+        { status: 500 }
+      );
+    }
+  } catch (error) {
+    console.error('Error deleting idea from sheets:', error);
+    return NextResponse.json(
+      { error: 'Failed to delete idea from Google Sheets', success: false },
       { status: 500 }
     );
   }

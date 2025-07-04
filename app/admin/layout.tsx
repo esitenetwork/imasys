@@ -9,7 +9,7 @@ export default function AdminLayout({
     <div className="min-h-screen bg-gray-50">
       {/* 管理画面ヘッダー */}
       <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-8">
               <Link href="/admin" className="font-bold text-xl text-gray-900">
@@ -21,9 +21,6 @@ export default function AdminLayout({
                 </Link>
                 <Link href="/admin/ideas" className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
                   アイデア一覧
-                </Link>
-                <Link href="/admin/sheets" className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
-                  Sheets連携
                 </Link>
                 <Link href="/admin/sync" className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
                   データ同期
