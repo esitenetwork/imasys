@@ -1,6 +1,9 @@
 import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
 
+// 動的レンダリングを強制（プリレンダリングを無効化）
+export const dynamic = 'force-dynamic'
+
 // Supabaseから取得するアイデアの型定義
 interface Idea {
   id: number
@@ -19,6 +22,15 @@ interface Idea {
 }
 
 export default async function AdminDashboard() {
+  // Supabaseクライアントが利用できない場合の対応
+  if (!supabase) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-red-600">Supabaseクライアントが利用できません</div>
+      </div>
+    )
+  }
+
   // Supabaseからアイデアを取得
   const { data: ideas, error } = await supabase
     .from('ideas')
