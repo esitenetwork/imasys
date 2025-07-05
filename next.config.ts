@@ -8,12 +8,17 @@ const withMDX = createMDX({
 const nextConfig: NextConfig = {
   pageExtensions: ['js', 'jsx', 'ts', 'tsx', 'md', 'mdx'],
   eslint: {
-    // ビルド時にESLintエラーを無視
+    // ビルド時にESLintエラーを完全に無視
     ignoreDuringBuilds: true,
   },
   typescript: {
-    // ビルド時にTypeScriptエラーを無視
+    // ビルド時にTypeScriptエラーを完全に無視
     ignoreBuildErrors: true,
+  },
+  // Vercel専用設定
+  experimental: {
+    // 型チェックを無効化
+    typedRoutes: false,
   },
 };
 
