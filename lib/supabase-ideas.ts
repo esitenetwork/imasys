@@ -1,5 +1,5 @@
 import { supabase } from './supabase'
-import type { IdeaRecord } from './supabase'
+import matter from 'gray-matter'
 
 export interface IdeaData {
   id: number
@@ -29,17 +29,19 @@ export async function getPublishedIdeas(): Promise<IdeaData[]> {
     return []
   }
 
+  if (!data) return []
+
   // データ形式を変換
-  return data.map(record => ({
+  return data.map((record: any) => ({
     id: record.id!,
-    title: record.title,
-    slug: record.slug,
+    title: record.title || '',
+    slug: record.slug || '',
     category: record.category || '',
-    tags: record.tags ? record.tags.split(',').map(t => t.trim()) : [],
+    tags: record.tags ? record.tags.split(',').map((t: string) => t.trim()) : [],
     price: record.price_range || '',
     duration: record.duration || '',
-    // MDXコンテンツから説明を抽出（簡易版）
-    description: extractDescription(record.mdx_content || ''),
+    // 複数の方法でdescriptionを取得
+    description: extractDescription(record.mdx_content || '', record.notes || ''),
     features: extractFeatures(record.mdx_content || ''),
     benefits: extractBenefits(record.mdx_content || ''),
     technologies: extractTechnologies(record.mdx_content || ''),
@@ -61,15 +63,17 @@ export async function getIdeasByCategory(category: string): Promise<IdeaData[]> 
     return []
   }
 
-  return data.map(record => ({
+  if (!data) return []
+
+  return data.map((record: any) => ({
     id: record.id!,
-    title: record.title,
-    slug: record.slug,
+    title: record.title || '',
+    slug: record.slug || '',
     category: record.category || '',
-    tags: record.tags ? record.tags.split(',').map(t => t.trim()) : [],
+    tags: record.tags ? record.tags.split(',').map((t: string) => t.trim()) : [],
     price: record.price_range || '',
     duration: record.duration || '',
-    description: extractDescription(record.mdx_content || ''),
+    description: extractDescription(record.mdx_content || '', record.notes || ''),
     features: extractFeatures(record.mdx_content || ''),
     benefits: extractBenefits(record.mdx_content || ''),
     technologies: extractTechnologies(record.mdx_content || ''),
@@ -92,13 +96,13 @@ export async function getIdeaBySlug(slug: string): Promise<IdeaData | null> {
 
   return {
     id: data.id!,
-    title: data.title,
-    slug: data.slug,
+    title: data.title || '',
+    slug: data.slug || '',
     category: data.category || '',
-    tags: data.tags ? data.tags.split(',').map(t => t.trim()) : [],
+    tags: data.tags ? data.tags.split(',').map((t: string) => t.trim()) : [],
     price: data.price_range || '',
     duration: data.duration || '',
-    description: extractDescription(data.mdx_content || ''),
+    description: extractDescription(data.mdx_content || '', data.notes || ''),
     features: extractFeatures(data.mdx_content || ''),
     benefits: extractBenefits(data.mdx_content || ''),
     technologies: extractTechnologies(data.mdx_content || ''),
@@ -106,10 +110,40 @@ export async function getIdeaBySlug(slug: string): Promise<IdeaData | null> {
   }
 }
 
-// MDXコンテンツから説明を抽出（簡易版）
-function extractDescription(mdxContent: string): string {
-  const match = mdxContent.match(/## 解決策の概要\s*\n\n([\s\S]*?)(?=\n##|$)/)
-  return match ? match[1].trim() : ''
+// MDXコンテンツから説明を抽出（改良版）
+function extractDescription(mdxContent: string, notes: string): string {
+  if (!mdxContent) return notes || ''
+
+  try {
+    // フロントマターからdescriptionを抽出
+    const { data } = matter(mdxContent)
+    if (data.description) {
+      return data.description
+    }
+  } catch (error) {
+    console.warn('Error parsing frontmatter:', error)
+  }
+
+  // フロントマターがない場合は、MDXコンテンツから抽出を試みる
+  const patterns = [
+    /## 解決策\s*\n\n([\s\S]*?)(?=\n##|$)/,
+    /## 解決策の概要\s*\n\n([\s\S]*?)(?=\n##|$)/,
+    /## 概要\s*\n\n([\s\S]*?)(?=\n##|$)/
+  ]
+
+  for (const pattern of patterns) {
+    const match = mdxContent.match(pattern)
+    if (match) {
+      // 最初の段落のみ取得（改行まで）
+      const firstParagraph = match[1].trim().split('\n')[0]
+      if (firstParagraph) {
+        return firstParagraph
+      }
+    }
+  }
+
+  // 最終的にnotesを返す
+  return notes || ''
 }
 
 // MDXコンテンツから機能を抽出
@@ -118,7 +152,7 @@ function extractFeatures(mdxContent: string): string[] {
   if (!match) return []
   
   const features = match[1].match(/- (.+)/g)
-  return features ? features.map(f => f.replace('- ', '')) : []
+  return features ? features.map((f: string) => f.replace('- ', '')) : []
 }
 
 // MDXコンテンツから導入効果を抽出
@@ -127,7 +161,7 @@ function extractBenefits(mdxContent: string): string[] {
   if (!match) return []
   
   const benefits = match[1].match(/- (.+)/g)
-  return benefits ? benefits.map(b => b.replace('- ', '')) : []
+  return benefits ? benefits.map((b: string) => b.replace('- ', '')) : []
 }
 
 // MDXコンテンツから使用技術を抽出
@@ -136,5 +170,5 @@ function extractTechnologies(mdxContent: string): string[] {
   if (!match) return []
   
   const tech = match[1].match(/- (.+)/g)
-  return tech ? tech.map(t => t.replace('- ', '')) : []
+  return tech ? tech.map((t: string) => t.replace('- ', '')) : []
 }
