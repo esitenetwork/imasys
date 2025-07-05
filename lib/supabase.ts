@@ -13,7 +13,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
 // 公開用クライアント（ブラウザでも使用可能）
 export const supabase = supabaseUrl && supabaseAnonKey
   ? createClient(supabaseUrl, supabaseAnonKey)
-  : null as any
+  : null
 
 // サーバー専用クライアント（より高い権限）
 export const supabaseAdmin = supabaseUrl && supabaseServiceKey
@@ -23,7 +23,7 @@ export const supabaseAdmin = supabaseUrl && supabaseServiceKey
         persistSession: false
       }
     })
-  : null as any
+  : null
 
 // データベースの型定義
 export interface IdeaRecord {

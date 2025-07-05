@@ -18,6 +18,8 @@ export interface IdeaData {
 
 // Supabaseから公開済みのアイデアを取得
 export async function getPublishedIdeas(): Promise<IdeaData[]> {
+  if (!supabase) return []
+  
   const { data, error } = await supabase
     .from('ideas')
     .select('*')
@@ -51,6 +53,8 @@ export async function getPublishedIdeas(): Promise<IdeaData[]> {
 
 // カテゴリ別にアイデアを取得
 export async function getIdeasByCategory(category: string): Promise<IdeaData[]> {
+  if (!supabase) return []
+  
   const { data, error } = await supabase
     .from('ideas')
     .select('*')
@@ -83,6 +87,8 @@ export async function getIdeasByCategory(category: string): Promise<IdeaData[]> 
 
 // スラッグでアイデアを取得
 export async function getIdeaBySlug(slug: string): Promise<IdeaData | null> {
+  if (!supabase) return null
+  
   const { data, error } = await supabase
     .from('ideas')
     .select('*')

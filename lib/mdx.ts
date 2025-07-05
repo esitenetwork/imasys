@@ -21,6 +21,8 @@ export type IdeaData = {
 // すべてのアイデアを取得（Supabaseから）
 export async function getAllIdeas(): Promise<IdeaData[]> {
   try {
+    if (!supabase) return []
+    
     const { data: ideas, error } = await supabase
       .from('ideas')
       .select('*')
@@ -78,12 +80,14 @@ export async function getAllIdeas(): Promise<IdeaData[]> {
 // 特定のアイデアを取得（Supabaseから）
 export async function getIdeaBySlug(slug: string): Promise<IdeaData | null> {
   try {
+    if (!supabase) return null
+    
     const { data: idea, error } = await supabase
       .from('ideas')
       .select('*')
       .eq('slug', slug)
       .eq('status', 'published')
-      .single() as { data: IdeaRecord | null, error: any }
+      .single()
 
     if (error || !idea) {
       console.error('Error fetching idea:', error)

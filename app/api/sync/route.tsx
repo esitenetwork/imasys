@@ -41,6 +41,13 @@ export async function GET() {
     // Google Sheetsからデータを取得
     const sheetsData = await getIdeasFromSheet();
     
+    if (!supabaseAdmin) {
+      return NextResponse.json(
+        { error: 'Supabase admin client not available' },
+        { status: 500 }
+      );
+    }
+    
     // Supabaseからデータを取得
     const { data: supabaseData, error } = await supabaseAdmin
       .from('ideas')
@@ -104,6 +111,13 @@ async function syncSheetsToSupabase() {
     // Google Sheetsからデータを取得
     const sheetsData = await getIdeasFromSheet();
     
+    if (!supabaseAdmin) {
+      return NextResponse.json(
+        { error: 'Supabase admin client not available' },
+        { status: 500 }
+      );
+    }
+    
     // Supabaseからデータを取得
     const { data: supabaseData, error: fetchError } = await supabaseAdmin
       .from('ideas')
@@ -123,7 +137,7 @@ async function syncSheetsToSupabase() {
 
     let insertCount = 0;
     let updateCount = 0;
-    let errors = [];
+    const syncErrors: string[] = [];
 
     for (const sheetItem of sheetsData) {
       if (!sheetItem.slug) continue;
@@ -147,7 +161,7 @@ async function syncSheetsToSupabase() {
 
         if (existingRecord) {
           // 更新
-          const { error: updateError } = await supabaseAdmin
+          const { error: updateError } = await supabaseAdmin!
             .from('ideas')
             .update({
               ...supabaseRecord,
@@ -156,24 +170,24 @@ async function syncSheetsToSupabase() {
             .eq('slug', sheetItem.slug);
 
           if (updateError) {
-            errors.push(`Update error for ${sheetItem.slug}: ${updateError.message}`);
+            syncErrors.push(`Update error for ${sheetItem.slug}: ${updateError.message}`);
           } else {
             updateCount++;
           }
         } else {
           // 新規挿入
-          const { error: insertError } = await supabaseAdmin
+          const { error: insertError } = await supabaseAdmin!
             .from('ideas')
             .insert(supabaseRecord);
 
           if (insertError) {
-            errors.push(`Insert error for ${sheetItem.slug}: ${insertError.message}`);
+            syncErrors.push(`Insert error for ${sheetItem.slug}: ${insertError.message}`);
           } else {
             insertCount++;
           }
         }
-      } catch (itemError) {
-        errors.push(`Error processing ${sheetItem.slug}: ${itemError}`);
+      } catch (itemError: any) {
+        syncErrors.push(`Error processing ${sheetItem.slug}: ${itemError}`);
       }
     }
 
@@ -183,7 +197,7 @@ async function syncSheetsToSupabase() {
       result: {
         inserted: insertCount,
         updated: updateCount,
-        errors: errors.length > 0 ? errors : null
+        errors: syncErrors.length > 0 ? syncErrors : null
       }
     });
   } catch (error) {
@@ -198,6 +212,13 @@ async function syncSheetsToSupabase() {
 // Supabase → Google Sheets 同期
 async function syncSupabaseToSheets() {
   try {
+    if (!supabaseAdmin) {
+      return NextResponse.json(
+        { error: 'Supabase admin client not available' },
+        { status: 500 }
+      );
+    }
+    
     // Supabaseからデータを取得
     const { data: supabaseData, error } = await supabaseAdmin
       .from('ideas')
@@ -219,7 +240,7 @@ async function syncSupabaseToSheets() {
 
     let insertCount = 0;
     let updateCount = 0;
-    let errors = [];
+    const syncErrors: string[] = [];
 
     for (const supabaseItem of supabaseData || []) {
       if (!supabaseItem.slug) continue;
@@ -246,7 +267,7 @@ async function syncSupabaseToSheets() {
           if (success) {
             updateCount++;
           } else {
-            errors.push(`Failed to update ${supabaseItem.slug} in sheets`);
+            syncErrors.push(`Failed to update ${supabaseItem.slug} in sheets`);
           }
         } else {
           // 新規挿入
@@ -254,11 +275,11 @@ async function syncSupabaseToSheets() {
           if (success) {
             insertCount++;
           } else {
-            errors.push(`Failed to insert ${supabaseItem.slug} to sheets`);
+            syncErrors.push(`Failed to insert ${supabaseItem.slug} to sheets`);
           }
         }
-      } catch (itemError) {
-        errors.push(`Error processing ${supabaseItem.slug}: ${itemError}`);
+      } catch (itemError: any) {
+        syncErrors.push(`Error processing ${supabaseItem.slug}: ${itemError}`);
       }
     }
 
@@ -268,7 +289,7 @@ async function syncSupabaseToSheets() {
       result: {
         inserted: insertCount,
         updated: updateCount,
-        errors: errors.length > 0 ? errors : null
+        errors: syncErrors.length > 0 ? syncErrors : null
       }
     });
   } catch (error) {

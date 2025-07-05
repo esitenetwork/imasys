@@ -1,7 +1,13 @@
 // 自動同期ユーティリティ関数
 
+interface IdeaData {
+  title: string;
+  slug: string;
+  [key: string]: any;
+}
+
 // アイデア保存後の自動同期
-export async function syncAfterSave(ideaData: any, operation: 'create' | 'update') {
+export async function syncAfterSave(ideaData: IdeaData, operation: 'create' | 'update') {
   try {
     console.log(`Starting auto-sync after ${operation}:`, ideaData.title);
     

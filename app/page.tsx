@@ -13,10 +13,6 @@ export default async function HomePage() {
     return acc
   }, {} as Record<string, number>)
 
-  // タグを集計
-  const allTags = ideas.flatMap(idea => idea.tags)
-  const uniqueTags = [...new Set(allTags)]
-
   return (
     <div>
       {/* ヒーローセクション */}
