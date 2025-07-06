@@ -335,15 +335,7 @@ function ContactForm() {
 
           {/* reCAPTCHA */}
           {recaptchaLoaded && (
-            <div className="w-full">
-              <div className="g-recaptcha" data-sitekey="6LftNXkrAAAAAPx5h79s1sWUZiOjssmB-bISFKYR"></div>
-              <style jsx>{`
-                .g-recaptcha {
-                  transform: scale(1);
-                  transform-origin: 0 0;
-                }
-              `}</style>
-            </div>
+            <div className="g-recaptcha" data-sitekey="6LftNXkrAAAAAPx5h79s1sWUZiOjssmB-bISFKYR"></div>
           )}
 
           <div>

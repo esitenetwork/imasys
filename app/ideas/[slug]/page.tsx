@@ -2,6 +2,7 @@ import { getIdeaBySlug, getAllIdeas } from '@/lib/mdx'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import Script from 'next/script'
+import { Metadata } from 'next'
 
 type Props = {
   params: Promise<{ slug: string }>
@@ -12,6 +13,53 @@ export async function generateStaticParams() {
   return ideas.map((idea) => ({
     slug: idea.slug,
   }))
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug } = await params
+  const idea = await getIdeaBySlug(slug)
+  
+  if (!idea) {
+    return {
+      title: 'ページが見つかりません',
+    }
+  }
+
+  return {
+    title: `${idea.title}｜AI活用システム開発事例 - IMASYS`,
+    description: `${idea.description} 構築期間${idea.duration}、価格${idea.price}でご提供。「こんなシステムが簡単に作れるようになった」を実証する具体的なアイデア事例です。無料相談受付中。`,
+    keywords: [
+      idea.title,
+      idea.category,
+      ...idea.tags,
+      "AI活用",
+      "システム開発",
+      "高速開発"
+    ],
+    openGraph: {
+      title: `${idea.title}｜AI活用システム開発事例`,
+      description: idea.description,
+      url: `https://imasys.jp/ideas/${slug}`,
+      type: 'article',
+      images: [
+        {
+          url: `/og-images/${slug}.jpg`,
+          width: 1200,
+          height: 630,
+          alt: idea.title,
+        }
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${idea.title}｜AI活用システム開発事例`,
+      description: idea.description,
+      images: [`/og-images/${slug}.jpg`],
+    },
+    alternates: {
+      canonical: `https://imasys.jp/ideas/${slug}`,
+    },
+  }
 }
 
 export default async function IdeaDetailPage({ params }: Props) {
@@ -29,6 +77,77 @@ export default async function IdeaDetailPage({ params }: Props) {
         src="https://www.google.com/recaptcha/api.js"
         strategy="afterInteractive"
       />
+      
+      {/* 構造化データ（Article） */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Article",
+            "headline": idea.title,
+            "description": idea.description,
+            "url": `https://imasys.jp/ideas/${slug}`,
+            "datePublished": new Date().toISOString(),
+            "dateModified": new Date().toISOString(),
+            "author": {
+              "@type": "Organization",
+              "name": "IMASYS"
+            },
+            "publisher": {
+              "@type": "Organization",
+              "name": "IMASYS",
+              "logo": {
+                "@type": "ImageObject",
+                "url": "https://imasys.jp/logo.png"
+              }
+            },
+            "mainEntityOfPage": {
+              "@type": "WebPage",
+              "@id": `https://imasys.jp/ideas/${slug}`
+            },
+            "articleSection": idea.category,
+            "keywords": idea.tags.join(", "),
+            "about": {
+              "@type": "Thing",
+              "name": "AI活用システム"
+            }
+          })
+        }}
+      />
+      
+      {/* 構造化データ（Product/Service） */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Service",
+            "name": idea.title,
+            "description": idea.description,
+            "provider": {
+              "@type": "Organization",
+              "name": "IMASYS"
+            },
+            "category": idea.category,
+            "offers": {
+              "@type": "Offer",
+              "price": idea.price.replace(/[^\d]/g, ''),
+              "priceCurrency": "JPY",
+              "availability": "https://schema.org/InStock",
+              "priceValidUntil": new Date(Date.now() + 365*24*60*60*1000).toISOString().split('T')[0]
+            },
+            "additionalProperty": [
+              {
+                "@type": "PropertyValue",
+                "name": "構築期間",
+                "value": idea.duration
+              }
+            ]
+          })
+        }}
+      />
+      
       <div className="min-h-screen bg-gray-50">
         {/* ヘッダー部分 */}
         <div className="bg-white shadow-sm border-b">
