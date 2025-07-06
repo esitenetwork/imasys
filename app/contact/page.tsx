@@ -1,11 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Script from 'next/script'
 
-export default function ContactPage() {
+function ContactForm() {
   const searchParams = useSearchParams()
   const [formData, setFormData] = useState({
     company: '',
@@ -289,5 +289,13 @@ export default function ContactPage() {
         </form>
       </div>
     </>
+  )
+}
+
+export default function ContactPage() {
+  return (
+    <Suspense fallback={<div className="max-w-3xl mx-auto px-4 py-16 text-center">Loading...</div>}>
+      <ContactForm />
+    </Suspense>
   )
 }
