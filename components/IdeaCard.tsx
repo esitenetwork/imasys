@@ -22,7 +22,7 @@ export default function IdeaCard({ slug, title, description, category, tags, pri
           <span className="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded">
             {category}
           </span>
-          <span className="text-sm text-gray-500">{price}</span>
+          <span className="text-sm text-green-600 font-medium">導入費用 {price}</span>
         </div>
         
         {/* タイトル - 1行固定、省略表示 */}

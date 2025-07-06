@@ -163,7 +163,7 @@ title: "アイデアのタイトル"
 description: "システムの説明"
 category: "カテゴリ"
 tags: ["タグ1", "タグ2"]
-price: "初期費用 30万円〜"
+price: "50万円"
 duration: "構築期間 2週間"
 source: "n8n #949"
 ---
@@ -286,10 +286,11 @@ source: "n8n #949"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md"
               >
                 <option value="">選択してください</option>
-                <option value="10万円〜">10万円〜</option>
-                <option value="30万円〜">30万円〜</option>
-                <option value="50万円〜">50万円〜</option>
-                <option value="100万円〜">100万円〜</option>
+                <option value="30万円">30万円</option>
+                <option value="50万円">50万円</option>
+                <option value="80万円">80万円</option>
+                <option value="100万円">100万円</option>
+                <option value="150万円">150万円</option>
                 <option value="要相談">要相談</option>
               </select>
             </div>

@@ -157,7 +157,7 @@ export default async function IdeaDetailPage({ params }: Props) {
                 <span className="inline-block bg-blue-600 text-white text-sm font-medium px-4 py-2 rounded-full">
                   {idea.category}
                 </span>
-                <span className="text-2xl font-bold text-blue-600">{idea.price}</span>
+                <span className="text-2xl font-bold text-green-600">導入費用 {idea.price}</span>
               </div>
               
               <h1 className="text-4xl font-bold text-gray-900 mb-4 leading-tight">{idea.title}</h1>

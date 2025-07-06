@@ -126,25 +126,6 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
-
-      {/* CTA */}
-      <section className="bg-blue-600 text-white py-16">
-        <div className="max-w-4xl mx-auto px-4 text-center">
-          <h2 className="text-3xl font-bold mb-6">
-            こんなシステムが作れるとは知らなかった
-          </h2>
-          <p className="text-xl mb-8">
-            気になるアイデアがありましたら、お気軽にご相談ください。
-            1-3週間・50万円〜で実現可能な具体的なご提案をいたします。
-          </p>
-          <a
-            href="/contact"
-            className="inline-block bg-white text-blue-600 px-8 py-4 rounded-lg font-bold hover:bg-gray-100"
-          >
-            無料相談はこちら
-          </a>
-        </div>
-      </section>
     </div>
   )
 }

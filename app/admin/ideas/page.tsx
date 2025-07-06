@@ -10,6 +10,7 @@ interface IdeaData {
   title: string;
   category?: string;
   price_range?: string;
+  duration?: string;
   tags?: string;
   source?: string;
   status: string;
@@ -22,6 +23,7 @@ interface ProcessedIdea {
   title: string;
   category: string;
   price: string;
+  duration: string;
   tags: string[];
   source?: string;
   status: string;
@@ -39,17 +41,26 @@ export default function AdminIdeasPage() {
       if (response.ok) {
         const data = await response.json()
         if (data.success && data.ideas) {
+          // デバッグ用ログ
+          console.log('Raw API data first item:', data.ideas[0])
+          
           // データを変換
-          const processedIdeas: ProcessedIdea[] = data.ideas.map((ideaItem: IdeaData) => ({
-            id: ideaItem.id,
-            slug: ideaItem.slug,
-            title: ideaItem.title,
-            category: ideaItem.category || '',
-            price: ideaItem.price_range || '',
-            tags: ideaItem.tags ? ideaItem.tags.split(',').map((tagItem: string) => tagItem.trim()) : [],
-            source: ideaItem.source,
-            status: ideaItem.status
-          }))
+          const processedIdeas: ProcessedIdea[] = data.ideas.map((ideaItem: IdeaData) => {
+            const processed = {
+              id: ideaItem.id,
+              slug: ideaItem.slug,
+              title: ideaItem.title,
+              category: ideaItem.category || '',
+              price: ideaItem.price_range || '',
+              duration: ideaItem.duration || '',
+              tags: ideaItem.tags ? ideaItem.tags.split(',').map((tagItem: string) => tagItem.trim()) : [],
+              source: ideaItem.source,
+              status: ideaItem.status
+            }
+            // デバッグ用ログ
+            console.log('Processed item duration:', processed.duration)
+            return processed
+          })
           setIdeas(processedIdeas)
         }
       }
@@ -125,7 +136,7 @@ export default function AdminIdeasPage() {
         <table className="w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4">
+              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5">
                 タイトル
               </th>
               <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -133,6 +144,9 @@ export default function AdminIdeasPage() {
               </th>
               <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                 価格
+              </th>
+              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                期間
               </th>
               <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                 ステータス
@@ -148,7 +162,7 @@ export default function AdminIdeasPage() {
           <tbody className="bg-white divide-y divide-gray-200">
             {ideas.map((ideaRow: ProcessedIdea) => (
               <tr key={ideaRow.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 text-left w-1/4">
+                <td className="px-6 py-4 text-left w-1/5">
                   <div className="max-w-xs">
                     <div className="text-sm font-medium text-gray-900 truncate">
                       {ideaRow.title}
@@ -168,6 +182,9 @@ export default function AdminIdeasPage() {
                 </td>
                 <td className="px-6 py-4 text-center text-sm text-gray-900">
                   {ideaRow.price}
+                </td>
+                <td className="px-6 py-4 text-center text-sm text-gray-900">
+                  {ideaRow.duration}
                 </td>
                 <td className="px-6 py-4 text-center">
                   <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
