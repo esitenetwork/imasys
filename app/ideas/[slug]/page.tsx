@@ -1,5 +1,6 @@
 import { getIdeaBySlug, getAllIdeas } from '@/lib/mdx'
 import { notFound } from 'next/navigation'
+import Link from 'next/link'
 
 type Props = {
   params: Promise<{ slug: string }>
@@ -77,9 +78,12 @@ export default async function IdeaDetailPage({ params }: Props) {
         <div className="mt-8 bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg shadow-lg p-8 text-center text-white">
           <h3 className="text-2xl font-bold mb-4">このアイデアで相談してみませんか？</h3>
           <p className="text-blue-100 mb-6">具体的な要件をお聞かせください。最適なシステムをご提案いたします。</p>
-          <button className="bg-white text-blue-600 font-semibold px-8 py-3 rounded-lg hover:bg-gray-50 transition-colors">
+          <Link 
+            href={`/contact?ideaSlug=${slug}&ideaTitle=${encodeURIComponent(idea.title)}`}
+            className="inline-block bg-white text-blue-600 font-semibold px-8 py-3 rounded-lg hover:bg-gray-50 transition-colors"
+          >
             無料相談を申し込む
-          </button>
+          </Link>
         </div>
       </div>
     </div>
