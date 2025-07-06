@@ -273,11 +273,14 @@ function ContactForm() {
           </div>
 
           {/* reCAPTCHA */}
-          <div className="flex justify-center">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              認証
+            </label>
             <div className="g-recaptcha" data-sitekey="6LftNXkrAAAAAPx5h79s1sWUZiOjssmB-bISFKYR"></div>
           </div>
 
-          <div className="text-center">
+          <div>
             <button
               type="submit"
               disabled={isSubmitting || (formData.systemCategory === '特定のシステムについて' && !formData.ideaTitle)}
