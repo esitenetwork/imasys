@@ -100,7 +100,7 @@ export default function AboutPage() {
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-3">圧倒的スピード</h3>
               <p className="text-gray-600 leading-relaxed">
-                従来の受託開発（3-6ヶ月）を1-3週間に短縮。世界中の開発者が検証済みのアイデアをベースにした高速開発を実現。
+                従来の受託開発を大幅に短縮。世界中の開発者が検証済みのアイデアをベースにした高速開発を実現。
               </p>
             </div>
             <div className="bg-white rounded-lg shadow-sm border p-6">
@@ -122,7 +122,7 @@ export default function AboutPage() {
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-3">適正価格</h3>
               <p className="text-gray-600 leading-relaxed">
-                従来開発の1/3-1/5の価格（50万円〜）を実現。中小企業でも手が届く価格で高品質なカスタムシステムをご提供。
+                従来開発よりも大幅に低価格を実現。企業規模に関わらず手が届く価格で高品質なカスタムシステムをご提供。
               </p>
             </div>
           </div>
@@ -155,7 +155,7 @@ export default function AboutPage() {
               <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-sm">3</div>
               <div>
                 <h3 className="text-lg font-bold text-gray-900 mb-2">高速開発・納品</h3>
-                <p className="text-gray-600">1-3週間でシステムを開発し、買い切りでご提供。アフターサポートも充実。</p>
+                <p className="text-gray-600">短期間でシステムを開発し、買い切りでご提供。アフターサポートも充実。</p>
               </div>
             </div>
           </div>
@@ -168,51 +168,63 @@ export default function AboutPage() {
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">なぜIMASYSが選ばれるのか</h2>
           </div>
-          <div className="bg-white rounded-lg shadow-sm border p-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div>
-                <h3 className="text-xl font-bold text-gray-900 mb-4">従来の受託開発</h3>
-                <ul className="space-y-2 text-gray-600">
-                  <li className="flex items-center gap-2">
-                    <span className="w-2 h-2 bg-red-500 rounded-full"></span>
-                    開発期間：3-6ヶ月
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="w-2 h-2 bg-red-500 rounded-full"></span>
-                    費用：200-500万円
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="w-2 h-2 bg-red-500 rounded-full"></span>
-                    要件定義から設計まで長期間
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="w-2 h-2 bg-red-500 rounded-full"></span>
-                    アイデア出しも含めて有料
-                  </li>
-                </ul>
-              </div>
-              <div>
-                <h3 className="text-xl font-bold text-gray-900 mb-4">IMASYS</h3>
-                <ul className="space-y-2 text-gray-600">
-                  <li className="flex items-center gap-2">
-                    <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                    開発期間：1-3週間
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                    費用：50万円〜
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                    実証済みアイデアで高速開発
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                    アイデア提案は無料
-                  </li>
-                </ul>
-              </div>
-            </div>
+          <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
+            <table className="w-full">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">項目</th>
+                  <th className="px-6 py-4 text-center text-sm font-medium text-red-600 uppercase tracking-wider">従来の受託開発</th>
+                  <th className="px-6 py-4 text-center text-sm font-medium text-blue-600 uppercase tracking-wider">IMASYS</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                <tr>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">開発期間</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 text-center">
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                      長期間
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 text-center">
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                      短期間
+                    </span>
+                  </td>
+                </tr>
+                <tr className="bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">費用</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 text-center">
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                      高額
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 text-center">
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                      適正価格
+                    </span>
+                  </td>
+                </tr>
+                <tr>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">開発手法</td>
+                  <td className="px-6 py-4 text-sm text-gray-600 text-center">要件定義から設計まで長期間</td>
+                  <td className="px-6 py-4 text-sm text-gray-600 text-center">実証済みアイデアで高速開発</td>
+                </tr>
+                <tr className="bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">アイデア提案</td>
+                  <td className="px-6 py-4 text-sm text-gray-600 text-center">アイデア出しも含めて有料</td>
+                  <td className="px-6 py-4 text-sm text-gray-600 text-center">
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                      無料
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div className="mt-4 text-center">
+            <p className="text-sm text-gray-600">
+              実際の納期や導入費用については、システム詳細ページをご確認いただき、相見積もりをとってみてください。
+            </p>
           </div>
         </div>
       </section>
@@ -224,8 +236,7 @@ export default function AboutPage() {
             まずは無料相談から始めませんか？
           </h2>
           <p className="text-xl mb-8 text-blue-100">
-            Excel業務の限界を感じているなら、AIで解決できる可能性があります。<br />
-            お気軽にご相談ください。
+            たくさんありすぎてどれが当てはまるのかわからないといった方は、御社にぴったりのシステムがいくらでどのくらいの期間で導入できるのかアドバイスさせていただきますので、お気軽にご相談ください。
           </p>
           <Link
             href="/contact"
