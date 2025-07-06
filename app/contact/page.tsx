@@ -19,6 +19,50 @@ function ContactForm() {
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle')
+  const [recaptchaLoaded, setRecaptchaLoaded] = useState(false)
+
+  // reCAPTCHAが読み込まれた時の処理
+  const handleRecaptchaLoad = () => {
+    setRecaptchaLoaded(true)
+    // reCAPTCHAを手動でレンダリング
+    renderRecaptcha()
+  }
+
+  // reCAPTCHAの手動レンダリング
+  const renderRecaptcha = () => {
+    const recaptchaElement = document.querySelector('.g-recaptcha')
+    if ((window as any).grecaptcha && (window as any).grecaptcha.render && recaptchaElement) {
+      // 既にレンダリング済みの場合はスキップ
+      if (recaptchaElement.innerHTML.trim() === '') {
+        try {
+          (window as any).grecaptcha.render(recaptchaElement, {
+            sitekey: '6LftNXkrAAAAAPx5h79s1sWUZiOjssmB-bISFKYR'
+          })
+        } catch (error) {
+          console.error('reCAPTCHA render error:', error)
+        }
+      }
+    }
+  }
+
+  // reCAPTCHAの初期化チェック
+  useEffect(() => {
+    // 既にreCAPTCHAが利用可能な場合
+    if ((window as any).grecaptcha && (window as any).grecaptcha.render) {
+      setRecaptchaLoaded(true)
+      renderRecaptcha()
+    }
+  }, [])
+
+  // recaptchaLoadedが変更された時にレンダリングを試行
+  useEffect(() => {
+    if (recaptchaLoaded) {
+      // 少し遅延させてからレンダリング（DOM更新を待つ）
+      setTimeout(() => {
+        renderRecaptcha()
+      }, 100)
+    }
+  }, [recaptchaLoaded])
 
   // URLパラメータから自動設定（システム詳細ページからのアクセス）
   useEffect(() => {
@@ -43,12 +87,23 @@ function ContactForm() {
     setSubmitStatus('idle')
 
     try {
+      // reCAPTCHAトークンを取得
+      const recaptchaResponse = (window as any).grecaptcha?.getResponse()
+      if (!recaptchaResponse) {
+        alert('reCAPTCHAを完了してください')
+        setIsSubmitting(false)
+        return
+      }
+
       const response = await fetch('/api/contact', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          recaptchaToken: recaptchaResponse
+        }),
       })
 
       if (response.ok) {
@@ -63,6 +118,10 @@ function ContactForm() {
           ideaTitle: '',
           message: ''
         })
+        // reCAPTCHAをリセット
+        if ((window as any).grecaptcha) {
+          (window as any).grecaptcha.reset()
+        }
       } else {
         setSubmitStatus('error')
       }
@@ -97,7 +156,9 @@ function ContactForm() {
       <Script
         src="https://www.google.com/recaptcha/api.js"
         strategy="afterInteractive"
+        onLoad={handleRecaptchaLoad}
       />
+      
       <div className="max-w-3xl mx-auto px-4 py-16">
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
@@ -273,12 +334,17 @@ function ContactForm() {
           </div>
 
           {/* reCAPTCHA */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              認証
-            </label>
-            <div className="g-recaptcha" data-sitekey="6LftNXkrAAAAAPx5h79s1sWUZiOjssmB-bISFKYR"></div>
-          </div>
+          {recaptchaLoaded && (
+            <div className="w-full">
+              <div className="g-recaptcha" data-sitekey="6LftNXkrAAAAAPx5h79s1sWUZiOjssmB-bISFKYR"></div>
+              <style jsx>{`
+                .g-recaptcha {
+                  transform: scale(1);
+                  transform-origin: 0 0;
+                }
+              `}</style>
+            </div>
+          )}
 
           <div>
             <button
