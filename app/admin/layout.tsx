@@ -25,6 +25,9 @@ export default function AdminLayout({
                 <Link href="/admin/sync" className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
                   データ同期
                 </Link>
+                <Link href="/admin/references" className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
+                  参考サイト
+                </Link>
               </nav>
             </div>
             <Link href="/" className="text-sm text-gray-500 hover:text-gray-700">
