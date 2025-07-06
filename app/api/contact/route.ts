@@ -22,7 +22,7 @@ export async function POST(request: Request) {
 
     // メール送信
     const data = await resend.emails.send({
-      from: 'onboarding@resend.dev',
+      from: 'noreply@imasys.jp',
       to: 'info@imasys.jp',
       subject: `【イマシス】お問い合わせ：${company} ${name}様`,
       html: `
@@ -46,7 +46,7 @@ export async function POST(request: Request) {
 
     // 自動返信メール
     await resend.emails.send({
-      from: 'onboarding@resend.dev',
+      from: 'noreply@imasys.jp',
       to: email,
       subject: '【イマシス】お問い合わせありがとうございます',
       html: `
