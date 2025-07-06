@@ -96,7 +96,7 @@ function ContactForm() {
     <>
       <Script
         src="https://www.google.com/recaptcha/api.js"
-        strategy="beforeInteractive"
+        strategy="afterInteractive"
       />
       <div className="max-w-3xl mx-auto px-4 py-16">
         <div className="text-center mb-12">
