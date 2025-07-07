@@ -67,65 +67,146 @@ export default async function HomePage() {
         }}
       />
 
-      {/* ヒーローセクション */}
-      <section className="bg-gradient-to-b from-blue-50 to-white py-16">
-        <div className="max-w-7xl mx-auto px-4 text-center">
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-            AI×業務改善アイデア集
-          </h1>
-          <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-            自社専用にカスタマイズされたオリジナルのシステムが早く！安く！導入できる！
-          </p>
-          <div className="flex gap-4 justify-center mb-8">
-            <div className="bg-white rounded-lg shadow-sm px-6 py-3">
-              <span className="text-3xl font-bold text-blue-600">{ideas.length}</span>
-              <span className="text-gray-600 ml-2">個のアイデア</span>
+      {/* 2カラムレイアウト */}
+      <div className="flex">
+        {/* 左カラム - 固定サイドバー */}
+        <aside 
+          className="w-80 bg-gray-50 border-r border-gray-200 p-6 fixed left-0 top-16 h-full overflow-y-auto custom-scrollbar"
+          style={{
+            scrollbarWidth: 'thin',
+            scrollbarColor: 'transparent transparent',
+            paddingBottom: '50px'
+          }}
+        >
+          <div className="space-y-8">
+            {/* 統計情報 */}
+            <div>
+              <h2 className="text-sm font-semibold text-gray-900 mb-3">統計情報</h2>
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-xs text-gray-600">総アイデア数</span>
+                  <span className="text-lg font-bold text-blue-600">{ideas.length}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-xs text-gray-600">カテゴリ数</span>
+                  <span className="text-lg font-bold text-blue-600">{Object.keys(categories).length}</span>
+                </div>
+              </div>
             </div>
-            <div className="bg-white rounded-lg shadow-sm px-6 py-3">
-              <span className="text-3xl font-bold text-blue-600">{Object.keys(categories).length}</span>
-              <span className="text-gray-600 ml-2">カテゴリ</span>
+
+            {/* 区切り線 */}
+            <hr className="border-gray-300" />
+
+            {/* カテゴリフィルター */}
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">カテゴリで絞り込み</h2>
+              <div className="space-y-2">
+                <label className="flex items-center w-full px-3 py-2 bg-blue-600 text-white rounded-md text-sm font-medium cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    defaultChecked 
+                    className="mr-3 w-4 h-4 text-blue-600 bg-white border-gray-300 rounded focus:ring-blue-500"
+                  />
+                  すべて ({ideas.length})
+                </label>
+                {Object.entries(categories).map(([category, count]) => (
+                  <label 
+                    key={category}
+                    className="flex items-center w-full px-3 py-2 bg-gray-100 text-gray-700 rounded-md text-sm hover:bg-gray-200 transition-colors cursor-pointer"
+                  >
+                    <input 
+                      type="checkbox" 
+                      className="mr-3 w-4 h-4 text-blue-600 bg-white border-gray-300 rounded focus:ring-blue-500"
+                    />
+                    {category} ({count})
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {/* 区切り線 */}
+            <hr className="border-gray-300" />
+
+            {/* タグフィルター */}
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">タグで絞り込み</h2>
+              <div className="space-y-2">
+                {/* よく使われるタグを表示 */}
+                {['AI活用', '自動化', 'LINE連携', 'PDF生成', 'メール送信', 'データ分析', 'リアルタイム', '情報一元化'].map((tag) => {
+                  // そのタグを持つアイデアの数を計算
+                  const tagCount = ideas.filter(idea => {
+                    if (!idea.tags) return false;
+                    
+                    // tagsが配列の場合
+                    if (Array.isArray(idea.tags)) {
+                      return idea.tags.some(t => t.toLowerCase().includes(tag.toLowerCase()));
+                    }
+                    
+                    // tagsが文字列の場合
+                    if (typeof idea.tags === 'string') {
+                      return idea.tags.toLowerCase().includes(tag.toLowerCase());
+                    }
+                    
+                    return false;
+                  }).length;
+                  
+                  if (tagCount === 0) return null;
+                  
+                  return (
+                    <label 
+                      key={tag}
+                      className="flex items-center w-full px-3 py-2 bg-gray-100 text-gray-700 rounded-md text-sm hover:bg-gray-200 transition-colors cursor-pointer"
+                    >
+                      <input 
+                        type="checkbox" 
+                        className="mr-3 w-4 h-4 text-blue-600 bg-white border-gray-300 rounded focus:ring-blue-500"
+                      />
+                      #{tag} ({tagCount})
+                    </label>
+                  );
+                })}
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </aside>
 
-      {/* フィルターセクション */}
-      <section className="sticky top-0 bg-white shadow-sm z-10 py-4">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="flex flex-wrap gap-2">
-            <button className="px-4 py-2 bg-blue-600 text-white rounded-full text-sm">
-              すべて ({ideas.length})
-            </button>
-            {Object.entries(categories).map(([category, count]) => (
-              <button
-                key={category}
-                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-full text-sm hover:bg-gray-200"
-              >
-                {category} ({count})
-              </button>
-            ))}
-          </div>
-        </div>
-      </section>
+        {/* メインカラム */}
+        <main className="flex-1 ml-80">
+          {/* ヒーローセクション - メインカラム内 */}
+          <section className="bg-gradient-to-b from-blue-50 to-white py-12">
+            <div className="px-6 text-center">
+              <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+                AI×業務改善アイデア集
+              </h1>
+              <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
+                自社専用にカスタマイズされたオリジナルのシステムが早く！安く！導入できる！
+              </p>
+            </div>
+          </section>
 
-      {/* アイデア一覧 */}
-      <section className="py-12">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {ideas.map((idea) => (
-              <IdeaCard 
-                key={idea.id} 
-                slug={idea.slug}
-                title={idea.title}
-                description={idea.description}
-                category={idea.category}
-                tags={idea.tags}
-                price={idea.price}
-              />
-            ))}
-          </div>
-        </div>
-      </section>
+          {/* アイデア一覧セクション - メインカラム内 */}
+          <section className="p-6">
+            <div 
+              className="grid gap-6"
+              style={{
+                gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))'
+              }}
+            >
+              {ideas.map((idea) => (
+                <IdeaCard 
+                  key={idea.id} 
+                  slug={idea.slug}
+                  title={idea.title}
+                  description={idea.description}
+                  category={idea.category}
+                  tags={idea.tags}
+                  price={idea.price}
+                />
+              ))}
+            </div>
+          </section>
+        </main>
+      </div>
     </div>
   )
 }

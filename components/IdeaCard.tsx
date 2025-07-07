@@ -16,23 +16,25 @@ export default function IdeaCard({ slug, title, description, category, tags, pri
   const remainingTagsCount = tags.length - maxTagsToShow
 
   return (
-    <Link href={`/ideas/${slug}`} className="block">
-      <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow h-52 flex flex-col">
+    <Link href={`/ideas/${slug}`} className="block group">
+      <div className="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 hover:border-blue-300 p-6 h-52 flex flex-col">
         <div className="flex justify-between items-start mb-3">
-          <span className="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
             {category}
           </span>
-          <span className="text-sm text-green-600 font-medium">導入費用 {price}</span>
+          <span className="text-sm font-semibold text-green-600 bg-green-50 px-2.5 py-0.5 rounded-full">
+            導入費用 {price}
+          </span>
         </div>
         
         {/* タイトル - 1行固定、省略表示 */}
-        <h3 className="font-bold text-lg mb-2 truncate" title={title}>
+        <h3 className="font-bold text-lg mb-2 truncate group-hover:text-blue-600 transition-colors" title={title}>
           {title}
         </h3>
         
         {/* サマリー - 2行固定、省略表示 */}
         <div 
-          className="text-gray-600 text-sm mb-3 overflow-hidden"
+          className="text-gray-600 text-sm mb-3 overflow-hidden leading-relaxed"
           style={{
             display: '-webkit-box',
             WebkitLineClamp: 2,
@@ -49,9 +51,9 @@ export default function IdeaCard({ slug, title, description, category, tags, pri
         <div className="flex-grow"></div>
         
         {/* タグ - 1行固定、省略表示 */}
-        <div className="flex gap-2 items-center">
+        <div className="flex gap-1.5 items-center">
           {visibleTags.map((tag) => (
-            <span key={tag} className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded whitespace-nowrap">
+            <span key={tag} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors whitespace-nowrap">
               #{tag}
             </span>
           ))}
@@ -65,3 +67,20 @@ export default function IdeaCard({ slug, title, description, category, tags, pri
     </Link>
   )
 }
+
+// CSS追加（globals.cssに追加が必要）
+/*
+.line-clamp-2 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.line-clamp-3 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+*/
