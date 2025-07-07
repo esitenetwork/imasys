@@ -17,34 +17,123 @@
   -webkit-line-clamp: 3;
 }
 
-/* カスタムスクロールバー - istockphoto風 */
-.custom-scrollbar {
-  scrollbar-width: thin !important;
-  scrollbar-color: transparent transparent !important;
+/* モダンなスクロールバー - istockphoto風 */
+.modern-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+  transition: scrollbar-color 0.3s ease;
 }
 
-.custom-scrollbar:hover {
-  scrollbar-color: #d1d5db #f3f4f6 !important;
+.modern-scrollbar:hover {
+  scrollbar-color: #d1d5db #f9fafb;
 }
 
-/* WebKit系ブラウザ用 */
-.custom-scrollbar::-webkit-scrollbar {
-  width: 6px !important;
+/* WebKit系ブラウザ用 - よりモダンなデザイン */
+.modern-scrollbar::-webkit-scrollbar {
+  width: 8px;
 }
 
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: transparent !important;
+.modern-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 4px;
 }
 
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background-color: transparent !important;
-  border-radius: 3px !important;
+.modern-scrollbar::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  border-radius: 4px;
+  transition: background-color 0.3s ease;
 }
 
-.custom-scrollbar:hover::-webkit-scrollbar-thumb {
-  background-color: #d1d5db !important;
+.modern-scrollbar:hover::-webkit-scrollbar-thumb {
+  background-color: #d1d5db;
 }
 
-.custom-scrollbar:hover::-webkit-scrollbar-thumb:hover {
-  background-color: #9ca3af !important;
+.modern-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: #9ca3af;
+}
+
+/* アニメーション用のカスタムクラス */
+@keyframes slideInFromTop {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOutToTop {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+}
+
+.slide-in-top {
+  animation: slideInFromTop 0.3s ease-out;
+}
+
+.slide-out-top {
+  animation: slideOutToTop 0.3s ease-in;
+}
+
+/* カスタムバックドロップブラー効果 */
+.backdrop-blur-modern {
+  backdrop-filter: blur(8px) saturate(180%);
+  -webkit-backdrop-filter: blur(8px) saturate(180%);
+  background-color: rgba(255, 255, 255, 0.85);
+}
+
+/* モダンなフォーカス状態 */
+.modern-focus:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+  border-color: #3b82f6;
+}
+
+/* カードホバーエフェクト */
+.modern-card-hover {
+  transition: all 0.3s ease;
+}
+
+.modern-card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* レスポンシブ用のモバイル最適化 */
+@media (max-width: 1023px) {
+  .mobile-optimized {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+/* ダークモード対応（将来のため） */
+@media (prefers-color-scheme: dark) {
+  .dark-mode-ready {
+    /* ダークモード用のスタイルを将来ここに追加 */
+  }
+}
+
+/* 高コントラスト対応 */
+@media (prefers-contrast: high) {
+  .high-contrast {
+    border-width: 2px;
+  }
+}
+
+/* アニメーション無効化対応 */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

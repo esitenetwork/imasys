@@ -110,10 +110,15 @@ export default function RootLayout({
           `}
         </Script>
       </head>
-      <body className={inter.className}>
-        <Header />
-        {children}
-        <Footer />
+      <body className={`${inter.className} overflow-x-hidden`}>
+        {/* モダンなGrid Layout構造 */}
+        <div className="min-h-screen grid grid-rows-[auto_1fr_auto] bg-white">
+          <Header />
+          <main className="relative overflow-hidden">
+            {children}
+          </main>
+          <Footer />
+        </div>
       </body>
     </html>
   );
