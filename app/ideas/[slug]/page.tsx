@@ -148,6 +148,9 @@ export default async function IdeaDetailPage({ params }: Props) {
         }}
       />
       
+      {/* ヘッダー分の余白 */}
+      <div className="h-16"></div>
+      
       <div className="min-h-screen bg-gray-50">
         {/* ヘッダー部分 */}
         <div className="bg-white shadow-sm border-b">
