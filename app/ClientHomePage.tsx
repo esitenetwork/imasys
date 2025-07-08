@@ -8,23 +8,26 @@ interface HomePageProps {
 }
 
 export default function ClientHomePage({ ideas }: HomePageProps) {
+  // 状態管理
   const [isSticky, setIsSticky] = useState(false)
   const [footerPushUp, setFooterPushUp] = useState(0)
   const leftColumnRef = useRef<HTMLDivElement>(null)
+  const [selectedCategories, setSelectedCategories] = useState<string[]>(['すべて'])
+  const [selectedTags, setSelectedTags] = useState<string[]>([])
+  const [selectedIndustries, setSelectedIndustries] = useState<string[]>(['すべて'])
 
+  // スティッキーサイドバーの制御
   useEffect(() => {
     const handleScroll = () => {
       const scrollTop = window.scrollY
       const headerHeight = 64
       
-      // ヘッダー分スクロールしたら左カラムを固定
       if (scrollTop >= headerHeight) {
         setIsSticky(true)
       } else {
         setIsSticky(false)
       }
 
-      // フッター押し上げ処理
       const footer = document.querySelector('footer')
       if (footer && isSticky) {
         const footerRect = footer.getBoundingClientRect()
@@ -45,7 +48,6 @@ export default function ClientHomePage({ ideas }: HomePageProps) {
       const leftColumn = leftColumnRef.current
       if (!leftColumn || !isSticky) return
 
-      // マウスが左カラム上にある場合のみ、左カラム内スクロールに限定
       const rect = leftColumn.getBoundingClientRect()
       const isMouseOverLeftColumn = 
         e.clientX >= rect.left && 
@@ -54,8 +56,16 @@ export default function ClientHomePage({ ideas }: HomePageProps) {
         e.clientY <= rect.bottom
 
       if (isMouseOverLeftColumn) {
-        e.preventDefault()
-        leftColumn.scrollTop += e.deltaY
+        const scrollTop = leftColumn.scrollTop
+        const scrollHeight = leftColumn.scrollHeight
+        const clientHeight = leftColumn.clientHeight
+        const isAtTop = scrollTop === 0
+        const isAtBottom = Math.abs(scrollHeight - clientHeight - scrollTop) < 1
+
+        if ((e.deltaY > 0 && !isAtBottom) || (e.deltaY < 0 && !isAtTop)) {
+          e.preventDefault()
+          leftColumn.scrollTop += e.deltaY
+        }
       }
     }
 
@@ -68,6 +78,7 @@ export default function ClientHomePage({ ideas }: HomePageProps) {
     }
   }, [isSticky])
 
+  // カテゴリ集計
   const categories = (ideas || []).reduce((acc, idea) => {
     if (idea && idea.category) {
       acc[idea.category] = (acc[idea.category] || 0) + 1
@@ -75,9 +86,79 @@ export default function ClientHomePage({ ideas }: HomePageProps) {
     return acc
   }, {} as Record<string, number>)
 
+  // フィルタリング処理
+  const handleCategoryChange = (category: string) => {
+    if (category === 'すべて') {
+      setSelectedCategories(['すべて'])
+    } else {
+      setSelectedCategories(prev => {
+        const newCategories = prev.filter(c => c !== 'すべて')
+        if (newCategories.includes(category)) {
+          const filtered = newCategories.filter(c => c !== category)
+          return filtered.length === 0 ? ['すべて'] : filtered
+        } else {
+          return [...newCategories, category]
+        }
+      })
+    }
+  }
+
+  const handleTagChange = (tag: string) => {
+    setSelectedTags(prev => {
+      if (prev.includes(tag)) {
+        return prev.filter(t => t !== tag)
+      } else {
+        return [...prev, tag]
+      }
+    })
+  }
+
+  const handleIndustryChange = (industry: string) => {
+    if (industry === 'すべて') {
+      setSelectedIndustries(['すべて'])
+    } else {
+      setSelectedIndustries(prev => {
+        const newIndustries = prev.filter(i => i !== 'すべて')
+        if (newIndustries.includes(industry)) {
+          const filtered = newIndustries.filter(i => i !== industry)
+          return filtered.length === 0 ? ['すべて'] : filtered
+        } else {
+          return [...newIndustries, industry]
+        }
+      })
+    }
+  }
+
+  // アイデアフィルタリング
+  const filteredIdeas = (ideas || []).filter(idea => {
+    const categoryMatch = selectedCategories.includes('すべて') || 
+                         selectedCategories.includes(idea.category)
+    
+    const tagMatch = selectedTags.length === 0 || selectedTags.some(selectedTag => {
+      if (!idea.tags) return false
+      
+      if (Array.isArray(idea.tags)) {
+        return idea.tags.some((tagItem: any) => {
+          if (typeof tagItem === 'string') {
+            return tagItem.toLowerCase().includes(selectedTag.toLowerCase())
+          }
+          return false
+        })
+      }
+      
+      if (typeof idea.tags === 'string') {
+        return idea.tags.toLowerCase().includes(selectedTag.toLowerCase())
+      }
+      
+      return false
+    })
+    
+    return categoryMatch && tagMatch
+  })
+
   return (
     <div>
-      {/* 構造化データ（WebSite） */}
+      {/* 構造化データ */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
@@ -100,48 +181,67 @@ export default function ClientHomePage({ ideas }: HomePageProps) {
         }}
       />
 
-      {/* ヘッダー分の余白 */}
+      {/* ヘッダー余白 */}
       <div className="h-16"></div>
 
-      {/* istockphoto風レイアウト */}
+      {/* メインレイアウト */}
       <div className="flex min-h-screen">
         
-        {/* 左カラム - 本番デザイン */}
+        {/* 左サイドバー */}
         <div className="w-80 bg-gray-50 border-r border-gray-200 hidden lg:block">
           <div 
             ref={leftColumnRef}
-            className={`w-80 h-screen p-6 overflow-y-auto modern-scrollbar space-y-8 ${
+            className={`w-80 h-screen p-6 space-y-6 overflow-y-auto modern-scrollbar ${
               isSticky ? 'fixed top-0 left-0 z-10 bg-gray-50 border-r border-gray-200' : 'relative'
             }`}
             style={isSticky ? { top: `${-footerPushUp}px` } : {}}
           >
             
-            {/* 統計情報 */}
+            {/* 業種フィルター */}
             <div>
-              <h2 className="text-sm font-semibold text-gray-900 mb-3">統計情報</h2>
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-xs text-gray-600">総アイデア数</span>
-                  <span className="text-lg font-bold text-blue-600">{(ideas || []).length}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-xs text-gray-600">カテゴリ数</span>
-                  <span className="text-lg font-bold text-blue-600">{Object.keys(categories).length}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* 区切り線 */}
-            <hr className="border-gray-300" />
-
-            {/* カテゴリフィルター */}
-            <div>
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">カテゴリで絞り込み</h2>
+              <h2 className="text-sm font-semibold text-gray-900 mb-3">業種で絞り込み</h2>
               <div className="space-y-2">
                 <label className="flex items-center w-full px-3 py-2 bg-blue-600 text-white rounded-md text-sm font-medium cursor-pointer">
                   <input 
                     type="checkbox" 
-                    defaultChecked 
+                    checked={selectedIndustries.includes('すべて')}
+                    onChange={() => handleIndustryChange('すべて')}
+                    className="mr-3 w-4 h-4 text-blue-600 bg-white border-gray-300 rounded focus:ring-blue-500"
+                  />
+                  すべて
+                </label>
+                <label className="flex items-center w-full px-3 py-2 bg-gray-100 text-gray-700 rounded-md text-sm hover:bg-gray-200 transition-colors cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    checked={selectedIndustries.includes('歯科')}
+                    onChange={() => handleIndustryChange('歯科')}
+                    className="mr-3 w-4 h-4 text-blue-600 bg-white border-gray-300 rounded focus:ring-blue-500"
+                  />
+                  歯科
+                </label>
+                <label className="flex items-center w-full px-3 py-2 bg-gray-100 text-gray-700 rounded-md text-sm hover:bg-gray-200 transition-colors cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    checked={selectedIndustries.includes('不動産')}
+                    onChange={() => handleIndustryChange('不動産')}
+                    className="mr-3 w-4 h-4 text-blue-600 bg-white border-gray-300 rounded focus:ring-blue-500"
+                  />
+                  不動産
+                </label>
+              </div>
+            </div>
+
+            <hr className="border-gray-300" />
+
+            {/* カテゴリフィルター */}
+            <div>
+              <h2 className="text-sm font-semibold text-gray-900 mb-3">カテゴリで絞り込み</h2>
+              <div className="space-y-2">
+                <label className="flex items-center w-full px-3 py-2 bg-blue-600 text-white rounded-md text-sm font-medium cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    checked={selectedCategories.includes('すべて')}
+                    onChange={() => handleCategoryChange('すべて')}
                     className="mr-3 w-4 h-4 text-blue-600 bg-white border-gray-300 rounded focus:ring-blue-500"
                   />
                   すべて ({(ideas || []).length})
@@ -155,6 +255,8 @@ export default function ClientHomePage({ ideas }: HomePageProps) {
                     >
                       <input 
                         type="checkbox" 
+                        checked={selectedCategories.includes(category)}
+                        onChange={() => handleCategoryChange(category)}
                         className="mr-3 w-4 h-4 text-blue-600 bg-white border-gray-300 rounded focus:ring-blue-500"
                       />
                       {category} ({count})
@@ -163,15 +265,30 @@ export default function ClientHomePage({ ideas }: HomePageProps) {
                 })}
               </div>
             </div>
+            
+          </div>
+        </div>
 
-            {/* 区切り線 */}
-            <hr className="border-gray-300" />
+        {/* メインコンテンツ */}
+        <main className="flex-1 w-full min-h-full">
+          
+          {/* ヒーローセクション */}
+          <section className="bg-gradient-to-b from-blue-50 to-white py-12">
+            <div className="px-6 text-center">
+              <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+                AI×業務改善アイデア集
+              </h1>
+              <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
+                自社専用にカスタマイズされたオリジナルのシステムが早く！安く！導入できる！
+              </p>
+            </div>
+          </section>
 
-            {/* タグフィルター */}
-            <div>
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">タグで絞り込み</h2>
-              <div className="space-y-2">
-                {['AI活用', '自動化', 'LINE連携', 'PDF生成', 'メール送信', 'データ分析', 'リアルタイム', '情報一元化'].map((tag) => {
+          {/* タグフィルター */}
+          <section className="px-6 py-6 bg-white">
+            <div className="max-w-6xl mx-auto">
+              <div className="flex flex-wrap gap-2">
+                {['AI活用', '自動化', 'LINE連携', 'PDF生成', 'メール送信', 'データ分析', 'リアルタイム', '情報一元化', 'Slack連携', 'Gmail連携', '画像認識', 'OCR', 'チャットボット', 'API連携', '在庫管理', '顧客管理'].map((tag) => {
                   const tagCount = (ideas || []).filter(idea => {
                     if (!idea.tags) return false
                     
@@ -194,40 +311,24 @@ export default function ClientHomePage({ ideas }: HomePageProps) {
                   if (tagCount === 0) return null
                   
                   return (
-                    <label 
+                    <button 
                       key={tag}
-                      className="flex items-center w-full px-3 py-2 bg-gray-100 text-gray-700 rounded-md text-sm hover:bg-gray-200 transition-colors cursor-pointer"
+                      onClick={() => handleTagChange(tag)}
+                      className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium transition-colors cursor-pointer border ${
+                        selectedTags.includes(tag) 
+                          ? 'bg-blue-600 text-white border-blue-600' 
+                          : 'bg-gray-100 text-gray-700 hover:bg-blue-100 hover:text-blue-700 border-gray-300 hover:border-blue-300'
+                      }`}
                     >
-                      <input 
-                        type="checkbox" 
-                        className="mr-3 w-4 h-4 text-blue-600 bg-white border-gray-300 rounded focus:ring-blue-500"
-                      />
-                      #{tag} ({tagCount})
-                    </label>
+                      #{tag} <span className="ml-1 text-xs">({tagCount})</span>
+                    </button>
                   )
                 })}
               </div>
             </div>
-            
-          </div>
-        </div>
-
-        {/* メインカラム */}
-        <main className="flex-1 w-full min-h-full">
-          
-          {/* ヒーローセクション */}
-          <section className="bg-gradient-to-b from-blue-50 to-white py-12">
-            <div className="px-6 text-center">
-              <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-                AI×業務改善アイデア集
-              </h1>
-              <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-                自社専用にカスタマイズされたオリジナルのシステムが早く！安く！導入できる！
-              </p>
-            </div>
           </section>
 
-          {/* アイデア一覧セクション */}
+          {/* アイデア一覧 */}
           <section className="p-6 pb-20">
             <div 
               className="grid gap-6"
@@ -235,7 +336,7 @@ export default function ClientHomePage({ ideas }: HomePageProps) {
                 gridTemplateColumns: 'repeat(auto-fit, minmax(380px, 1fr))'
               }}
             >
-              {(ideas || []).map((idea) => (
+              {filteredIdeas.map((idea) => (
                 <IdeaCard 
                   key={idea.id} 
                   slug={idea.slug}
