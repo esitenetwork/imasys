@@ -1,12 +1,72 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 
 interface HomePageProps {
   ideas: any[]
 }
 
 export default function TestStickySidebar({ ideas }: HomePageProps) {
+  const [isSticky, setIsSticky] = useState(false)
+  const [footerPushUp, setFooterPushUp] = useState(0)
+  const leftColumnRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollTop = window.scrollY
+      const headerHeight = 64
+      
+      // ヘッダー分スクロールしたら左カラムを固定
+      if (scrollTop >= headerHeight) {
+        setIsSticky(true)
+      } else {
+        setIsSticky(false)
+      }
+
+      // フッター押し上げ処理
+      const footer = document.querySelector('footer')
+      if (footer && isSticky) {
+        const footerRect = footer.getBoundingClientRect()
+        const viewportHeight = window.innerHeight
+        
+        if (footerRect.top <= viewportHeight) {
+          const footerOverlap = Math.max(0, viewportHeight - footerRect.top)
+          setFooterPushUp(footerOverlap)
+        } else {
+          setFooterPushUp(0)
+        }
+      } else {
+        setFooterPushUp(0)
+      }
+    }
+
+    const handleWheel = (e: WheelEvent) => {
+      const leftColumn = leftColumnRef.current
+      if (!leftColumn || !isSticky) return
+
+      // マウスが左カラム上にある場合のみ、左カラム内スクロールに限定
+      const rect = leftColumn.getBoundingClientRect()
+      const isMouseOverLeftColumn = 
+        e.clientX >= rect.left && 
+        e.clientX <= rect.right && 
+        e.clientY >= rect.top && 
+        e.clientY <= rect.bottom
+
+      if (isMouseOverLeftColumn) {
+        e.preventDefault()
+        leftColumn.scrollTop += e.deltaY
+      }
+    }
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    window.addEventListener('wheel', handleWheel, { passive: false })
+    
+    return () => {
+      window.removeEventListener('scroll', handleScroll)
+      window.removeEventListener('wheel', handleWheel)
+    }
+  }, [isSticky])
+
   const categories = (ideas || []).reduce((acc, idea) => {
     if (idea && idea.category) {
       acc[idea.category] = (acc[idea.category] || 0) + 1
@@ -19,19 +79,17 @@ export default function TestStickySidebar({ ideas }: HomePageProps) {
       {/* ヘッダー分の余白 */}
       <div className="h-16"></div>
 
-      {/* istockphoto風シンプルレイアウト */}
+      {/* istockphoto風レイアウト */}
       <div className="flex min-h-screen">
         
-        {/* 左カラム - istockphoto風シンプルsticky */}
+        {/* 左カラム */}
         <div className="w-80 bg-red-500 text-white">
           <div 
-            className="w-80 p-4 custom-scrollbar"
-            style={{
-              position: 'sticky',
-              top: '0px',
-              height: '100vh',
-              overflowY: 'auto'
-            }}
+            ref={leftColumnRef}
+            className={`w-80 h-screen p-4 overflow-y-auto modern-scrollbar ${
+              isSticky ? 'fixed top-0 left-0 z-10' : 'relative'
+            }`}
+            style={isSticky ? { top: `${-footerPushUp}px` } : {}}
           >
             <h2>私は sticky です</h2>
             <p>スクロールしてテストしてください</p>
@@ -42,7 +100,7 @@ export default function TestStickySidebar({ ideas }: HomePageProps) {
               <div>カテゴリ数: {Object.keys(categories).length}</div>
             </div>
 
-            {/* カテゴリフィルター - 文字数増加 */}
+            {/* カテゴリフィルター */}
             <div className="mb-6">
               <h3 className="text-lg font-bold mb-3">カテゴリで絞り込み</h3>
               <div className="space-y-2">
@@ -53,18 +111,18 @@ export default function TestStickySidebar({ ideas }: HomePageProps) {
                   const [category, count] = entry as [string, number]
                   return (
                     <div key={category} className="px-3 py-2 bg-red-600 rounded text-sm">
-                      {category} ({count}) - このカテゴリには様々なアイデアが含まれており、業務改善に役立つシステムが多数掲載されています
+                      {category} ({count})
                     </div>
                   )
                 })}
               </div>
             </div>
 
-            {/* タグフィルター - 文字数増加 */}
+            {/* タグフィルター */}
             <div className="mb-6">
               <h3 className="text-lg font-bold mb-3">タグで絞り込み</h3>
               <div className="space-y-2">
-                {['AI活用', '自動化', 'LINE連携', 'PDF生成', 'メール送信', 'データ分析', 'リアルタイム', '情報一元化'].map((tag) => {
+                {['AI活用', '自動化', 'LINE連携'].map((tag) => {
                   const tagCount = (ideas || []).filter(idea => {
                     if (!idea || !idea.tags) return false
                     
@@ -88,33 +146,10 @@ export default function TestStickySidebar({ ideas }: HomePageProps) {
                   
                   return (
                     <div key={tag} className="px-3 py-2 bg-red-600 rounded text-sm">
-                      #{tag} ({tagCount}) - この技術を活用したシステムにより、業務効率化と生産性向上を実現できます。導入により大幅な工数削減が期待できます
+                      #{tag} ({tagCount})
                     </div>
                   )
                 })}
-              </div>
-            </div>
-
-            {/* 追加説明セクション - さらに文字数増加 */}
-            <div className="mb-6">
-              <h3 className="text-lg font-bold mb-3">システム導入のメリット</h3>
-              <div className="space-y-3 text-sm">
-                <div className="bg-red-600 p-3 rounded">
-                  <h4 className="font-semibold mb-2">業務効率化</h4>
-                  <p>従来手作業で行っていた業務を自動化することで、大幅な時間短縮が可能です。毎日の繰り返し作業を削減し、より付加価値の高い業務に集中できるようになります。</p>
-                </div>
-                <div className="bg-red-600 p-3 rounded">
-                  <h4 className="font-semibold mb-2">コスト削減</h4>
-                  <p>人件費の削減だけでなく、ミスの減少による修正コストの削減、処理速度向上による機会損失の防止など、様々な面でコスト削減効果が期待できます。</p>
-                </div>
-                <div className="bg-red-600 p-3 rounded">
-                  <h4 className="font-semibold mb-2">品質向上</h4>
-                  <p>システムによる自動処理により、人的ミスを大幅に減らすことができます。一定の品質を保った処理が可能になり、顧客満足度の向上にもつながります。</p>
-                </div>
-                <div className="bg-red-600 p-3 rounded">
-                  <h4 className="font-semibold mb-2">データ活用</h4>
-                  <p>業務データの蓄積と分析により、今まで見えなかった課題や改善点を発見できます。データドリブンな意思決定により、より効果的な経営判断が可能になります。</p>
-                </div>
               </div>
             </div>
           </div>
@@ -144,8 +179,6 @@ export default function TestStickySidebar({ ideas }: HomePageProps) {
                 <li>会社概要</li>
                 <li>代表者挨拶</li>
                 <li>企業理念</li>
-                <li>沿革</li>
-                <li>アクセス</li>
               </ul>
             </div>
             <div>
@@ -154,8 +187,6 @@ export default function TestStickySidebar({ ideas }: HomePageProps) {
                 <li>AI開発</li>
                 <li>システム開発</li>
                 <li>コンサルティング</li>
-                <li>保守運用</li>
-                <li>研修サービス</li>
               </ul>
             </div>
             <div>
@@ -164,8 +195,6 @@ export default function TestStickySidebar({ ideas }: HomePageProps) {
                 <li>お問い合わせ</li>
                 <li>よくある質問</li>
                 <li>技術資料</li>
-                <li>導入事例</li>
-                <li>価格表</li>
               </ul>
             </div>
             <div>
@@ -174,8 +203,6 @@ export default function TestStickySidebar({ ideas }: HomePageProps) {
                 <li>利用規約</li>
                 <li>プライバシーポリシー</li>
                 <li>特定商取引法</li>
-                <li>免責事項</li>
-                <li>著作権について</li>
               </ul>
             </div>
           </div>

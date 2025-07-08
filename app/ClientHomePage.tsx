@@ -1,13 +1,73 @@
 'use client'
 
 import IdeaCard from '@/components/IdeaCard'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 
 interface HomePageProps {
   ideas: any[]
 }
 
 export default function ClientHomePage({ ideas }: HomePageProps) {
+  const [isSticky, setIsSticky] = useState(false)
+  const [footerPushUp, setFooterPushUp] = useState(0)
+  const leftColumnRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollTop = window.scrollY
+      const headerHeight = 64
+      
+      // ヘッダー分スクロールしたら左カラムを固定
+      if (scrollTop >= headerHeight) {
+        setIsSticky(true)
+      } else {
+        setIsSticky(false)
+      }
+
+      // フッター押し上げ処理
+      const footer = document.querySelector('footer')
+      if (footer && isSticky) {
+        const footerRect = footer.getBoundingClientRect()
+        const viewportHeight = window.innerHeight
+        
+        if (footerRect.top <= viewportHeight) {
+          const footerOverlap = Math.max(0, viewportHeight - footerRect.top)
+          setFooterPushUp(footerOverlap)
+        } else {
+          setFooterPushUp(0)
+        }
+      } else {
+        setFooterPushUp(0)
+      }
+    }
+
+    const handleWheel = (e: WheelEvent) => {
+      const leftColumn = leftColumnRef.current
+      if (!leftColumn || !isSticky) return
+
+      // マウスが左カラム上にある場合のみ、左カラム内スクロールに限定
+      const rect = leftColumn.getBoundingClientRect()
+      const isMouseOverLeftColumn = 
+        e.clientX >= rect.left && 
+        e.clientX <= rect.right && 
+        e.clientY >= rect.top && 
+        e.clientY <= rect.bottom
+
+      if (isMouseOverLeftColumn) {
+        e.preventDefault()
+        leftColumn.scrollTop += e.deltaY
+      }
+    }
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    window.addEventListener('wheel', handleWheel, { passive: false })
+    
+    return () => {
+      window.removeEventListener('scroll', handleScroll)
+      window.removeEventListener('wheel', handleWheel)
+    }
+  }, [isSticky])
+
   const categories = (ideas || []).reduce((acc, idea) => {
     if (idea && idea.category) {
       acc[idea.category] = (acc[idea.category] || 0) + 1
@@ -16,7 +76,7 @@ export default function ClientHomePage({ ideas }: HomePageProps) {
   }, {} as Record<string, number>)
 
   return (
-    <div className="relative">
+    <div>
       {/* 構造化データ（WebSite） */}
       <script
         type="application/ld+json"
@@ -43,121 +103,117 @@ export default function ClientHomePage({ ideas }: HomePageProps) {
       {/* ヘッダー分の余白 */}
       <div className="h-16"></div>
 
-      {/* モダンなGrid Layout - 普通スクロール版 */}
-      <div className="grid lg:grid-cols-[320px_1fr] min-h-[calc(100vh-4rem)]">
+      {/* istockphoto風レイアウト */}
+      <div className="flex min-h-screen">
         
-        {/* 左カラム - 普通スクロール */}
-        <aside className="hidden lg:block">
-          <div className="bg-gray-50 border-r border-gray-200">
-            <div 
-              className="p-6 space-y-8 custom-scrollbar"
-              style={{
-                position: 'sticky',
-                top: '0px',
-                height: '100vh',
-                overflowY: 'auto'
-              }}
-            >
-              
-              {/* 統計情報 */}
-              <div>
-                <h2 className="text-sm font-semibold text-gray-900 mb-3">統計情報</h2>
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs text-gray-600">総アイデア数</span>
-                    <span className="text-lg font-bold text-blue-600">{(ideas || []).length}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs text-gray-600">カテゴリ数</span>
-                    <span className="text-lg font-bold text-blue-600">{Object.keys(categories).length}</span>
-                  </div>
+        {/* 左カラム - 本番デザイン */}
+        <div className="w-80 bg-gray-50 border-r border-gray-200 hidden lg:block">
+          <div 
+            ref={leftColumnRef}
+            className={`w-80 h-screen p-6 overflow-y-auto modern-scrollbar space-y-8 ${
+              isSticky ? 'fixed top-0 left-0 z-10 bg-gray-50 border-r border-gray-200' : 'relative'
+            }`}
+            style={isSticky ? { top: `${-footerPushUp}px` } : {}}
+          >
+            
+            {/* 統計情報 */}
+            <div>
+              <h2 className="text-sm font-semibold text-gray-900 mb-3">統計情報</h2>
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-xs text-gray-600">総アイデア数</span>
+                  <span className="text-lg font-bold text-blue-600">{(ideas || []).length}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-xs text-gray-600">カテゴリ数</span>
+                  <span className="text-lg font-bold text-blue-600">{Object.keys(categories).length}</span>
                 </div>
               </div>
-
-              {/* 区切り線 */}
-              <hr className="border-gray-300" />
-
-              {/* カテゴリフィルター */}
-              <div>
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">カテゴリで絞り込み</h2>
-                <div className="space-y-2">
-                  <label className="flex items-center w-full px-3 py-2 bg-blue-600 text-white rounded-md text-sm font-medium cursor-pointer">
-                    <input 
-                      type="checkbox" 
-                      defaultChecked 
-                      className="mr-3 w-4 h-4 text-blue-600 bg-white border-gray-300 rounded focus:ring-blue-500"
-                    />
-                    すべて ({(ideas || []).length})
-                  </label>
-                  {Object.entries(categories).map((entry) => {
-                    const [category, count] = entry as [string, number]
-                    return (
-                      <label 
-                        key={category}
-                        className="flex items-center w-full px-3 py-2 bg-gray-100 text-gray-700 rounded-md text-sm hover:bg-gray-200 transition-colors cursor-pointer"
-                      >
-                        <input 
-                          type="checkbox" 
-                          className="mr-3 w-4 h-4 text-blue-600 bg-white border-gray-300 rounded focus:ring-blue-500"
-                        />
-                        {category} ({count})
-                      </label>
-                    )
-                  })}
-                </div>
-              </div>
-
-              {/* 区切り線 */}
-              <hr className="border-gray-300" />
-
-              {/* タグフィルター */}
-              <div>
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">タグで絞り込み</h2>
-                <div className="space-y-2">
-                  {['AI活用', '自動化', 'LINE連携', 'PDF生成', 'メール送信', 'データ分析', 'リアルタイム', '情報一元化'].map((tag) => {
-                    const tagCount = (ideas || []).filter(idea => {
-                      if (!idea.tags) return false
-                      
-                      if (Array.isArray(idea.tags)) {
-                        return idea.tags.some((tagItem: any) => {
-                          if (typeof tagItem === 'string') {
-                            return tagItem.toLowerCase().includes(tag.toLowerCase())
-                          }
-                          return false
-                        })
-                      }
-                      
-                      if (typeof idea.tags === 'string') {
-                        return idea.tags.toLowerCase().includes(tag.toLowerCase())
-                      }
-                      
-                      return false
-                    }).length
-                    
-                    if (tagCount === 0) return null
-                    
-                    return (
-                      <label 
-                        key={tag}
-                        className="flex items-center w-full px-3 py-2 bg-gray-100 text-gray-700 rounded-md text-sm hover:bg-gray-200 transition-colors cursor-pointer"
-                      >
-                        <input 
-                          type="checkbox" 
-                          className="mr-3 w-4 h-4 text-blue-600 bg-white border-gray-300 rounded focus:ring-blue-500"
-                        />
-                        #{tag} ({tagCount})
-                      </label>
-                    )
-                  })}
-                </div>
-              </div>
-              
             </div>
+
+            {/* 区切り線 */}
+            <hr className="border-gray-300" />
+
+            {/* カテゴリフィルター */}
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">カテゴリで絞り込み</h2>
+              <div className="space-y-2">
+                <label className="flex items-center w-full px-3 py-2 bg-blue-600 text-white rounded-md text-sm font-medium cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    defaultChecked 
+                    className="mr-3 w-4 h-4 text-blue-600 bg-white border-gray-300 rounded focus:ring-blue-500"
+                  />
+                  すべて ({(ideas || []).length})
+                </label>
+                {Object.entries(categories).map((entry) => {
+                  const [category, count] = entry as [string, number]
+                  return (
+                    <label 
+                      key={category}
+                      className="flex items-center w-full px-3 py-2 bg-gray-100 text-gray-700 rounded-md text-sm hover:bg-gray-200 transition-colors cursor-pointer"
+                    >
+                      <input 
+                        type="checkbox" 
+                        className="mr-3 w-4 h-4 text-blue-600 bg-white border-gray-300 rounded focus:ring-blue-500"
+                      />
+                      {category} ({count})
+                    </label>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* 区切り線 */}
+            <hr className="border-gray-300" />
+
+            {/* タグフィルター */}
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">タグで絞り込み</h2>
+              <div className="space-y-2">
+                {['AI活用', '自動化', 'LINE連携', 'PDF生成', 'メール送信', 'データ分析', 'リアルタイム', '情報一元化'].map((tag) => {
+                  const tagCount = (ideas || []).filter(idea => {
+                    if (!idea.tags) return false
+                    
+                    if (Array.isArray(idea.tags)) {
+                      return idea.tags.some((tagItem: any) => {
+                        if (typeof tagItem === 'string') {
+                          return tagItem.toLowerCase().includes(tag.toLowerCase())
+                        }
+                        return false
+                      })
+                    }
+                    
+                    if (typeof idea.tags === 'string') {
+                      return idea.tags.toLowerCase().includes(tag.toLowerCase())
+                    }
+                    
+                    return false
+                  }).length
+                  
+                  if (tagCount === 0) return null
+                  
+                  return (
+                    <label 
+                      key={tag}
+                      className="flex items-center w-full px-3 py-2 bg-gray-100 text-gray-700 rounded-md text-sm hover:bg-gray-200 transition-colors cursor-pointer"
+                    >
+                      <input 
+                        type="checkbox" 
+                        className="mr-3 w-4 h-4 text-blue-600 bg-white border-gray-300 rounded focus:ring-blue-500"
+                      />
+                      #{tag} ({tagCount})
+                    </label>
+                  )
+                })}
+              </div>
+            </div>
+            
           </div>
-        </aside>
+        </div>
 
         {/* メインカラム */}
-        <main className="w-full min-h-full">
+        <main className="flex-1 w-full min-h-full">
           
           {/* ヒーローセクション */}
           <section className="bg-gradient-to-b from-blue-50 to-white py-12">
