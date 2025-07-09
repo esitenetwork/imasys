@@ -157,7 +157,7 @@ export default function ClientHomePage({ ideas }: HomePageProps) {
   })
 
   return (
-    <div>
+    <div className="bg-background">
       {/* 構造化データ */}
       <script
         type="application/ld+json"
@@ -188,61 +188,61 @@ export default function ClientHomePage({ ideas }: HomePageProps) {
       <div className="flex min-h-screen">
         
         {/* 左サイドバー */}
-        <div className="w-80 bg-gray-50 border-r border-gray-200 hidden lg:block">
+        <div className="w-80 bg-card border-r border-border hidden lg:block">
           <div 
             ref={leftColumnRef}
             className={`w-80 h-screen p-6 space-y-6 overflow-y-auto modern-scrollbar ${
-              isSticky ? 'fixed top-0 left-0 z-10 bg-gray-50 border-r border-gray-200' : 'relative'
+              isSticky ? 'fixed top-0 left-0 z-10 bg-card border-r border-border' : 'relative'
             }`}
             style={isSticky ? { top: `${-footerPushUp}px` } : {}}
           >
             
             {/* 業種フィルター */}
-            <div>
-              <h2 className="text-sm font-semibold text-gray-900 mb-3">業種で絞り込み</h2>
+            <div className="space-y-3">
+              <h2 className="text-sm font-semibold text-card-foreground">業種で絞り込み</h2>
               <div className="space-y-2">
-                <label className="flex items-center w-full px-3 py-2 bg-blue-600 text-white rounded-md text-sm font-medium cursor-pointer">
+                <label className="flex items-center w-full px-3 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium cursor-pointer transition-colors">
                   <input 
                     type="checkbox" 
                     checked={selectedIndustries.includes('すべて')}
                     onChange={() => handleIndustryChange('すべて')}
-                    className="mr-3 w-4 h-4 text-blue-600 bg-white border-gray-300 rounded focus:ring-blue-500"
+                    className="mr-3 w-4 h-4 text-primary bg-background border-border rounded focus:ring-primary focus:ring-2"
                   />
                   すべて
                 </label>
-                <label className="flex items-center w-full px-3 py-2 bg-gray-100 text-gray-700 rounded-md text-sm hover:bg-gray-200 transition-colors cursor-pointer">
+                <label className="flex items-center w-full px-3 py-2 bg-muted text-muted-foreground rounded-md text-sm hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer">
                   <input 
                     type="checkbox" 
                     checked={selectedIndustries.includes('歯科')}
                     onChange={() => handleIndustryChange('歯科')}
-                    className="mr-3 w-4 h-4 text-blue-600 bg-white border-gray-300 rounded focus:ring-blue-500"
+                    className="mr-3 w-4 h-4 text-primary bg-background border-border rounded focus:ring-primary focus:ring-2"
                   />
                   歯科
                 </label>
-                <label className="flex items-center w-full px-3 py-2 bg-gray-100 text-gray-700 rounded-md text-sm hover:bg-gray-200 transition-colors cursor-pointer">
+                <label className="flex items-center w-full px-3 py-2 bg-muted text-muted-foreground rounded-md text-sm hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer">
                   <input 
                     type="checkbox" 
                     checked={selectedIndustries.includes('不動産')}
                     onChange={() => handleIndustryChange('不動産')}
-                    className="mr-3 w-4 h-4 text-blue-600 bg-white border-gray-300 rounded focus:ring-blue-500"
+                    className="mr-3 w-4 h-4 text-primary bg-background border-border rounded focus:ring-primary focus:ring-2"
                   />
                   不動産
                 </label>
               </div>
             </div>
 
-            <hr className="border-gray-300" />
+            <hr className="border-border" />
 
             {/* カテゴリフィルター */}
-            <div>
-              <h2 className="text-sm font-semibold text-gray-900 mb-3">カテゴリで絞り込み</h2>
+            <div className="space-y-3">
+              <h2 className="text-sm font-semibold text-card-foreground">カテゴリで絞り込み</h2>
               <div className="space-y-2">
-                <label className="flex items-center w-full px-3 py-2 bg-blue-600 text-white rounded-md text-sm font-medium cursor-pointer">
+                <label className="flex items-center w-full px-3 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium cursor-pointer transition-colors">
                   <input 
                     type="checkbox" 
                     checked={selectedCategories.includes('すべて')}
                     onChange={() => handleCategoryChange('すべて')}
-                    className="mr-3 w-4 h-4 text-blue-600 bg-white border-gray-300 rounded focus:ring-blue-500"
+                    className="mr-3 w-4 h-4 text-primary bg-background border-border rounded focus:ring-primary focus:ring-2"
                   />
                   すべて ({(ideas || []).length})
                 </label>
@@ -251,13 +251,13 @@ export default function ClientHomePage({ ideas }: HomePageProps) {
                   return (
                     <label 
                       key={category}
-                      className="flex items-center w-full px-3 py-2 bg-gray-100 text-gray-700 rounded-md text-sm hover:bg-gray-200 transition-colors cursor-pointer"
+                      className="flex items-center w-full px-3 py-2 bg-muted text-muted-foreground rounded-md text-sm hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer"
                     >
                       <input 
                         type="checkbox" 
                         checked={selectedCategories.includes(category)}
                         onChange={() => handleCategoryChange(category)}
-                        className="mr-3 w-4 h-4 text-blue-600 bg-white border-gray-300 rounded focus:ring-blue-500"
+                        className="mr-3 w-4 h-4 text-primary bg-background border-border rounded focus:ring-primary focus:ring-2"
                       />
                       {category} ({count})
                     </label>
@@ -270,22 +270,22 @@ export default function ClientHomePage({ ideas }: HomePageProps) {
         </div>
 
         {/* メインコンテンツ */}
-        <main className="flex-1 w-full min-h-full">
+        <main className="flex-1 w-full min-h-full bg-background">
           
           {/* ヒーローセクション */}
-          <section className="bg-gradient-to-b from-blue-50 to-white py-12">
+          <section className="bg-gradient-to-b from-primary/5 to-background py-12">
             <div className="px-6 text-center">
-              <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+              <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
                 AI×業務改善アイデア集
               </h1>
-              <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
+              <p className="text-xl text-muted-foreground mb-8 max-w-3xl mx-auto">
                 自社専用にカスタマイズされたオリジナルのシステムが早く！安く！導入できる！
               </p>
             </div>
           </section>
 
           {/* タグフィルター */}
-          <section className="px-6 py-6 bg-white">
+          <section className="px-6 py-6 bg-card">
             <div className="max-w-6xl mx-auto">
               <div className="flex flex-wrap gap-2">
                 {['AI活用', '自動化', 'LINE連携', 'PDF生成', 'メール送信', 'データ分析', 'リアルタイム', '情報一元化', 'Slack連携', 'Gmail連携', '画像認識', 'OCR', 'チャットボット', 'API連携', '在庫管理', '顧客管理'].map((tag) => {
@@ -314,10 +314,10 @@ export default function ClientHomePage({ ideas }: HomePageProps) {
                     <button 
                       key={tag}
                       onClick={() => handleTagChange(tag)}
-                      className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium transition-colors cursor-pointer border ${
+                      className={`inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium transition-colors cursor-pointer border ${
                         selectedTags.includes(tag) 
-                          ? 'bg-blue-600 text-white border-blue-600' 
-                          : 'bg-gray-100 text-gray-700 hover:bg-blue-100 hover:text-blue-700 border-gray-300 hover:border-blue-300'
+                          ? 'bg-primary text-primary-foreground border-primary' 
+                          : 'bg-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground border-border'
                       }`}
                     >
                       #{tag} <span className="ml-1 text-xs">({tagCount})</span>
@@ -329,7 +329,7 @@ export default function ClientHomePage({ ideas }: HomePageProps) {
           </section>
 
           {/* アイデア一覧 */}
-          <section className="p-6 pb-20">
+          <section className="p-6 pb-20 bg-background">
             <div 
               className="grid gap-6"
               style={{

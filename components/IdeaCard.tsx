@@ -1,4 +1,6 @@
 import Link from 'next/link'
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
 
 type IdeaCardProps = {
   slug: string
@@ -17,70 +19,42 @@ export default function IdeaCard({ slug, title, description, category, tags, pri
 
   return (
     <Link href={`/ideas/${slug}`} className="block group">
-      <div className="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 hover:border-blue-300 p-6 h-52 flex flex-col">
-        <div className="flex justify-between items-start mb-3">
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-            {category}
-          </span>
-          <span className="text-sm font-semibold text-green-600 bg-green-50 px-2.5 py-0.5 rounded-full">
-            導入費用 {price}
-          </span>
-        </div>
+      <Card className="h-52 flex flex-col hover:shadow-md transition-all duration-200 group-hover:border-primary">
+        <CardHeader className="pb-3">
+          <div className="flex justify-between items-start mb-2">
+            <Badge variant="secondary" className="bg-primary/10 text-primary hover:bg-primary/20">
+              {category}
+            </Badge>
+            <Badge variant="outline" className="text-green-600 border-green-600 bg-green-50">
+              導入費用 {price}
+            </Badge>
+          </div>
+          <CardTitle className="text-lg leading-tight group-hover:text-primary transition-colors line-clamp-1" title={title}>
+            {title}
+          </CardTitle>
+        </CardHeader>
         
-        {/* タイトル - 1行固定、省略表示 */}
-        <h3 className="font-bold text-lg mb-2 truncate group-hover:text-blue-600 transition-colors" title={title}>
-          {title}
-        </h3>
-        
-        {/* サマリー - 2行固定、省略表示 */}
-        <div 
-          className="text-gray-600 text-sm mb-3 overflow-hidden leading-relaxed"
-          style={{
-            display: '-webkit-box',
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: 'vertical',
-            lineHeight: '1.4em',
-            height: '2.8em'
-          }}
-          title={description}
-        >
-          {description}
-        </div>
+        <CardContent className="pb-3 flex-grow">
+          <CardDescription className="text-sm leading-relaxed line-clamp-2" title={description}>
+            {description}
+          </CardDescription>
+        </CardContent>
 
-        {/* スペーサー - 残りの空間を埋める */}
-        <div className="flex-grow"></div>
-        
-        {/* タグ - 1行固定、省略表示 */}
-        <div className="flex gap-1.5 items-center">
-          {visibleTags.map((tag) => (
-            <span key={tag} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors whitespace-nowrap">
-              #{tag}
-            </span>
-          ))}
-          {remainingTagsCount > 0 && (
-            <span className="text-xs text-gray-500 font-medium">
-              +{remainingTagsCount}
-            </span>
-          )}
-        </div>
-      </div>
+        <CardFooter className="pt-0">
+          <div className="flex gap-1.5 items-center w-full">
+            {visibleTags.map((tag) => (
+              <Badge key={tag} variant="secondary" className="text-xs">
+                #{tag}
+              </Badge>
+            ))}
+            {remainingTagsCount > 0 && (
+              <span className="text-xs text-muted-foreground font-medium">
+                +{remainingTagsCount}
+              </span>
+            )}
+          </div>
+        </CardFooter>
+      </Card>
     </Link>
   )
 }
-
-// CSS追加（globals.cssに追加が必要）
-/*
-.line-clamp-2 {
-  overflow: hidden;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-}
-
-.line-clamp-3 {
-  overflow: hidden;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
-}
-*/

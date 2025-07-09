@@ -1,9 +1,9 @@
 export default function Footer() {
   return (
-    <footer className="bg-gray-50 border-t border-gray-200">
+    <footer className="bg-card border-t border-border">
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="text-center">
-          <p className="text-gray-600 text-sm">
+          <p className="text-muted-foreground text-sm">
             © 2025 IMASYS. All rights reserved.
           </p>
         </div>
