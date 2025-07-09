@@ -31,27 +31,27 @@ export default function Header() {
 
   return (
     <header 
-      className={`bg-card shadow-sm border-b border-border w-full fixed top-0 left-0 z-50 transition-transform duration-300 ease-in-out ${
+      className={`bg-primary/80 shadow-sm border-b border-primary/40 w-full fixed top-0 left-0 z-50 transition-transform duration-300 ease-in-out ${
         isVisible ? 'translate-y-0' : '-translate-y-full'
       }`}
     >
       <div className="w-full px-4">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center gap-4">
-            <Link href="/" className="text-xl font-bold text-primary">
+            <Link href="/" className="text-xl font-bold text-white">
               IMASYS
             </Link>
-            <span className="text-sm text-muted-foreground">
+            <span className="text-sm text-white/80">
               いまどきシステム導入ラボ「イマシス」
             </span>
           </div>
           
           <nav className="flex gap-8 mr-4">
-            <Link href="/about" className="hover:text-primary transition-colors">
-              <span className="text-sm font-medium">ABOUT</span>
+            <Link href="/about" className="hover:text-white/80 transition-colors">
+              <span className="text-sm font-medium text-white">ABOUT</span>
             </Link>
-            <Link href="/contact" className="hover:text-primary transition-colors">
-              <span className="text-sm font-medium">CONTACT</span>
+            <Link href="/contact" className="hover:text-white/80 transition-colors">
+              <span className="text-sm font-medium text-white">CONTACT</span>
             </Link>
           </nav>
         </div>

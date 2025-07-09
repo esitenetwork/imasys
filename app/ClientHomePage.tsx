@@ -8,7 +8,6 @@ interface HomePageProps {
 }
 
 export default function ClientHomePage({ ideas }: HomePageProps) {
-  // 状態管理
   const [isSticky, setIsSticky] = useState(false)
   const [footerPushUp, setFooterPushUp] = useState(0)
   const leftColumnRef = useRef<HTMLDivElement>(null)
@@ -16,18 +15,19 @@ export default function ClientHomePage({ ideas }: HomePageProps) {
   const [selectedTags, setSelectedTags] = useState<string[]>([])
   const [selectedIndustries, setSelectedIndustries] = useState<string[]>(['すべて'])
 
-  // スティッキーサイドバーの制御
   useEffect(() => {
     const handleScroll = () => {
       const scrollTop = window.scrollY
       const headerHeight = 64
-      
+
+      // ヘッダー分スクロールしたら左カラムを固定
       if (scrollTop >= headerHeight) {
         setIsSticky(true)
       } else {
         setIsSticky(false)
       }
 
+      // フッター押し上げ処理
       const footer = document.querySelector('footer')
       if (footer && isSticky) {
         const footerRect = footer.getBoundingClientRect()
@@ -48,43 +48,28 @@ export default function ClientHomePage({ ideas }: HomePageProps) {
       const leftColumn = leftColumnRef.current
       if (!leftColumn || !isSticky) return
 
+      // マウスが左カラム上にある場合のみ、左カラム内スクロールに限定
       const rect = leftColumn.getBoundingClientRect()
-      const isMouseOverLeftColumn = 
-        e.clientX >= rect.left && 
-        e.clientX <= rect.right && 
-        e.clientY >= rect.top && 
+      const isMouseOverLeftColumn =
+        e.clientX >= rect.left &&
+        e.clientX <= rect.right &&
+        e.clientY >= rect.top &&
         e.clientY <= rect.bottom
 
       if (isMouseOverLeftColumn) {
-        const scrollTop = leftColumn.scrollTop
-        const scrollHeight = leftColumn.scrollHeight
-        const clientHeight = leftColumn.clientHeight
-        const isAtTop = scrollTop === 0
-        const isAtBottom = Math.abs(scrollHeight - clientHeight - scrollTop) < 1
-
-        if ((e.deltaY > 0 && !isAtBottom) || (e.deltaY < 0 && !isAtTop)) {
-          e.preventDefault()
-          leftColumn.scrollTop += e.deltaY
-        }
+        e.preventDefault()
+        leftColumn.scrollTop += e.deltaY
       }
     }
 
     window.addEventListener('scroll', handleScroll, { passive: true })
     window.addEventListener('wheel', handleWheel, { passive: false })
-    
+
     return () => {
       window.removeEventListener('scroll', handleScroll)
       window.removeEventListener('wheel', handleWheel)
     }
   }, [isSticky])
-
-  // カテゴリ集計
-  const categories = (ideas || []).reduce((acc, idea) => {
-    if (idea && idea.category) {
-      acc[idea.category] = (acc[idea.category] || 0) + 1
-    }
-    return acc
-  }, {} as Record<string, number>)
 
   // フィルタリング処理
   const handleCategoryChange = (category: string) => {
@@ -156,9 +141,16 @@ export default function ClientHomePage({ ideas }: HomePageProps) {
     return categoryMatch && tagMatch
   })
 
+  const categories = (ideas || []).reduce((acc, idea) => {
+    if (idea && idea.category) {
+      acc[idea.category] = (acc[idea.category] || 0) + 1
+    }
+    return acc
+  }, {} as Record<string, number>)
+
   return (
     <div className="bg-background">
-      {/* 構造化データ */}
+      {/* 構造化データ（WebSite） */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
@@ -181,83 +173,64 @@ export default function ClientHomePage({ ideas }: HomePageProps) {
         }}
       />
 
-      {/* ヘッダー余白 */}
+      {/* ヘッダー分の余白 */}
       <div className="h-16"></div>
 
-      {/* メインレイアウト */}
+      {/* istockphoto風レイアウト */}
       <div className="flex min-h-screen">
-        
-        {/* 左サイドバー */}
+
+        {/* 左カラム - 本番色適用 */}
         <div className="w-80 bg-card border-r border-border hidden lg:block">
-          <div 
+          <div
             ref={leftColumnRef}
-            className={`w-80 h-screen p-6 space-y-6 overflow-y-auto modern-scrollbar ${
-              isSticky ? 'fixed top-0 left-0 z-10 bg-card border-r border-border' : 'relative'
+            className={`w-80 h-screen p-6 overflow-y-auto modern-scrollbar ${
+              isSticky ? 'fixed top-0 left-0 z-10' : 'relative'
             }`}
             style={isSticky ? { top: `${-footerPushUp}px` } : {}}
           >
-            
             {/* 業種フィルター */}
             <div className="space-y-3">
               <h2 className="text-sm font-semibold text-card-foreground">業種で絞り込み</h2>
-              <div className="space-y-2">
-                <label className="flex items-center w-full px-3 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium cursor-pointer transition-colors">
-                  <input 
-                    type="checkbox" 
-                    checked={selectedIndustries.includes('すべて')}
-                    onChange={() => handleIndustryChange('すべて')}
-                    className="mr-3 w-4 h-4 text-primary bg-background border-border rounded focus:ring-primary focus:ring-2"
-                  />
+              <div className="space-y-1">
+                <label className="flex items-center px-2 py-1 text-foreground text-sm font-medium cursor-pointer hover:text-primary">
+                  <input type="checkbox" defaultChecked className="mr-3 w-4 h-4" />
                   すべて
                 </label>
-                <label className="flex items-center w-full px-3 py-2 bg-muted text-muted-foreground rounded-md text-sm hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer">
-                  <input 
-                    type="checkbox" 
-                    checked={selectedIndustries.includes('歯科')}
-                    onChange={() => handleIndustryChange('歯科')}
-                    className="mr-3 w-4 h-4 text-primary bg-background border-border rounded focus:ring-primary focus:ring-2"
-                  />
+                <label className="flex items-center px-2 py-1 text-foreground text-sm font-medium cursor-pointer hover:text-primary">
+                  <input type="checkbox" className="mr-3 w-4 h-4" />
                   歯科
                 </label>
-                <label className="flex items-center w-full px-3 py-2 bg-muted text-muted-foreground rounded-md text-sm hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer">
-                  <input 
-                    type="checkbox" 
-                    checked={selectedIndustries.includes('不動産')}
-                    onChange={() => handleIndustryChange('不動産')}
-                    className="mr-3 w-4 h-4 text-primary bg-background border-border rounded focus:ring-primary focus:ring-2"
-                  />
+                <label className="flex items-center px-2 py-1 text-foreground text-sm font-medium cursor-pointer hover:text-primary">
+                  <input type="checkbox" className="mr-3 w-4 h-4" />
                   不動産
                 </label>
               </div>
             </div>
 
-            <hr className="border-border" />
+            <hr className="border-border my-4" />
 
             {/* カテゴリフィルター */}
             <div className="space-y-3">
               <h2 className="text-sm font-semibold text-card-foreground">カテゴリで絞り込み</h2>
-              <div className="space-y-2">
-                <label className="flex items-center w-full px-3 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium cursor-pointer transition-colors">
+              <div className="space-y-1">
+                <label className="flex items-center px-2 py-1 text-foreground text-sm font-medium cursor-pointer hover:text-primary">
                   <input 
                     type="checkbox" 
                     checked={selectedCategories.includes('すべて')}
                     onChange={() => handleCategoryChange('すべて')}
-                    className="mr-3 w-4 h-4 text-primary bg-background border-border rounded focus:ring-primary focus:ring-2"
+                    className="mr-3 w-4 h-4" 
                   />
                   すべて ({(ideas || []).length})
                 </label>
                 {Object.entries(categories).map((entry) => {
                   const [category, count] = entry as [string, number]
                   return (
-                    <label 
-                      key={category}
-                      className="flex items-center w-full px-3 py-2 bg-muted text-muted-foreground rounded-md text-sm hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer"
-                    >
+                    <label key={category} className="flex items-center px-2 py-1 text-foreground text-sm font-medium cursor-pointer hover:text-primary">
                       <input 
                         type="checkbox" 
                         checked={selectedCategories.includes(category)}
                         onChange={() => handleCategoryChange(category)}
-                        className="mr-3 w-4 h-4 text-primary bg-background border-border rounded focus:ring-primary focus:ring-2"
+                        className="mr-3 w-4 h-4" 
                       />
                       {category} ({count})
                     </label>
@@ -265,15 +238,14 @@ export default function ClientHomePage({ ideas }: HomePageProps) {
                 })}
               </div>
             </div>
-            
           </div>
         </div>
 
-        {/* メインコンテンツ */}
+        {/* メインカラム */}
         <main className="flex-1 w-full min-h-full bg-background">
-          
+
           {/* ヒーローセクション */}
-          <section className="bg-gradient-to-b from-primary/5 to-background py-12">
+          <section className="bg-gradient-to-b from-primary/5 to-background py-12 pt-24">
             <div className="px-6 text-center">
               <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
                 AI×業務改善アイデア集
@@ -286,45 +258,43 @@ export default function ClientHomePage({ ideas }: HomePageProps) {
 
           {/* タグフィルター */}
           <section className="px-6 py-6 bg-card">
-            <div className="max-w-6xl mx-auto">
-              <div className="flex flex-wrap gap-2">
-                {['AI活用', '自動化', 'LINE連携', 'PDF生成', 'メール送信', 'データ分析', 'リアルタイム', '情報一元化', 'Slack連携', 'Gmail連携', '画像認識', 'OCR', 'チャットボット', 'API連携', '在庫管理', '顧客管理'].map((tag) => {
-                  const tagCount = (ideas || []).filter(idea => {
-                    if (!idea.tags) return false
-                    
-                    if (Array.isArray(idea.tags)) {
-                      return idea.tags.some((tagItem: any) => {
-                        if (typeof tagItem === 'string') {
-                          return tagItem.toLowerCase().includes(tag.toLowerCase())
-                        }
-                        return false
-                      })
-                    }
-                    
-                    if (typeof idea.tags === 'string') {
-                      return idea.tags.toLowerCase().includes(tag.toLowerCase())
-                    }
-                    
-                    return false
-                  }).length
+            <div className="flex flex-wrap gap-2">
+              {['AI活用', '自動化', 'LINE連携', 'PDF生成', 'メール送信', 'データ分析', 'リアルタイム', '情報一元化', 'Slack連携', 'Gmail連携', '画像認識', 'OCR', 'チャットボット', 'API連携', '在庫管理', '顧客管理'].map((tag) => {
+                const tagCount = (ideas || []).filter(idea => {
+                  if (!idea.tags) return false
                   
-                  if (tagCount === 0) return null
+                  if (Array.isArray(idea.tags)) {
+                    return idea.tags.some((tagItem: any) => {
+                      if (typeof tagItem === 'string') {
+                        return tagItem.toLowerCase().includes(tag.toLowerCase())
+                      }
+                      return false
+                    })
+                  }
                   
-                  return (
-                    <button 
-                      key={tag}
-                      onClick={() => handleTagChange(tag)}
-                      className={`inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium transition-colors cursor-pointer border ${
-                        selectedTags.includes(tag) 
-                          ? 'bg-primary text-primary-foreground border-primary' 
-                          : 'bg-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground border-border'
-                      }`}
-                    >
-                      #{tag} <span className="ml-1 text-xs">({tagCount})</span>
-                    </button>
-                  )
-                })}
-              </div>
+                  if (typeof idea.tags === 'string') {
+                    return idea.tags.toLowerCase().includes(tag.toLowerCase())
+                  }
+                  
+                  return false
+                }).length
+                
+                if (tagCount === 0) return null
+                
+                return (
+                  <button 
+                    key={tag}
+                    onClick={() => handleTagChange(tag)}
+                    className={`inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium transition-colors cursor-pointer border ${
+                      selectedTags.includes(tag) 
+                        ? 'bg-primary text-primary-foreground border-primary' 
+                        : 'bg-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground border-border'
+                    }`}
+                  >
+                    #{tag} <span className="ml-1 text-xs">({tagCount})</span>
+                  </button>
+                )
+              })}
             </div>
           </section>
 

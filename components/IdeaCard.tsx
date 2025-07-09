@@ -19,13 +19,13 @@ export default function IdeaCard({ slug, title, description, category, tags, pri
 
   return (
     <Link href={`/ideas/${slug}`} className="block group">
-      <Card className="h-52 flex flex-col hover:shadow-md transition-all duration-200 group-hover:border-primary">
+      <Card className="h-52 flex flex-col hover:shadow-lg transition-all duration-200 group-hover:border-primary/60 group-hover:bg-primary/5">
         <CardHeader className="pb-3">
           <div className="flex justify-between items-start mb-2">
-            <Badge variant="secondary" className="bg-primary/10 text-primary hover:bg-primary/20">
+            <Badge variant="secondary" className="bg-primary/20 text-primary hover:bg-primary/30 border-primary/30">
               {category}
             </Badge>
-            <Badge variant="outline" className="text-green-600 border-green-600 bg-green-50">
+            <Badge variant="outline" className="text-emerald-700 border-emerald-600 bg-emerald-50 hover:bg-emerald-100">
               導入費用 {price}
             </Badge>
           </div>
@@ -43,12 +43,12 @@ export default function IdeaCard({ slug, title, description, category, tags, pri
         <CardFooter className="pt-0">
           <div className="flex gap-1.5 items-center w-full">
             {visibleTags.map((tag) => (
-              <Badge key={tag} variant="secondary" className="text-xs">
+              <Badge key={tag} variant="secondary" className="text-xs bg-slate-100 text-slate-700 hover:bg-slate-200">
                 #{tag}
               </Badge>
             ))}
             {remainingTagsCount > 0 && (
-              <span className="text-xs text-muted-foreground font-medium">
+              <span className="text-xs text-slate-500 font-medium">
                 +{remainingTagsCount}
               </span>
             )}
