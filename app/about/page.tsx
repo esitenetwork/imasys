@@ -9,6 +9,11 @@ export const metadata: Metadata = {
   title: "IMASYSとは｜AI活用の可能性を伝える専門企業",
   description: "IMASYSは、「AIって何ができるの？」「システム開発は高額？」という疑問をお持ちの経営者・担当者に、AI活用の可能性と高速開発技術をお伝えする専門企業です。従来の常識を覆す1-3週間・50万円〜のシステム開発をご提案します。",
   keywords: ["IMASYS", "イマシス", "AI活用", "システム開発 会社", "高速開発", "AI導入支援"],
+  robots: {
+    index: false,    // インデックス禁止
+    follow: false,   // リンクフォロー禁止
+    nocache: true,   // キャッシュ禁止
+  },
   openGraph: {
     title: "IMASYSとは｜AI活用の可能性を伝える専門企業",
     description: "「AIって何ができるの？」という疑問をお持ちの経営者・担当者に、AI活用の可能性と高速開発技術をお伝えする専門企業です。",

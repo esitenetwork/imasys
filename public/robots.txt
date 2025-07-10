@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+
+# イマシス AIアイデア・ギャラリー
+Sitemap: https://imasys.jp/sitemap.xml
+
+# クロール禁止ページ
+Disallow: /about
