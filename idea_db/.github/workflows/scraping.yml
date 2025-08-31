@@ -13,7 +13,7 @@ on:
         required: false
         type: choice
         options:
-          - ''
+          - 'all'
           - 'n8n'
           - 'zapier'
           - 'make'
@@ -36,6 +36,7 @@ jobs:
       GOOGLE_SHEETS_ID: ${{ secrets.GOOGLE_SHEETS_ID }}
       GOOGLE_SERVICE_ACCOUNT_EMAIL: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_EMAIL }}
       GOOGLE_PRIVATE_KEY: ${{ secrets.GOOGLE_PRIVATE_KEY }}
+      GOOGLE_SERVICE_ACCOUNT_KEY: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_KEY }}
       DEBUG_MODE: true
       LOG_LEVEL: info
 
@@ -64,7 +65,7 @@ jobs:
         if [ "${{ github.event.inputs.test_mode }}" == "true" ]; then
           echo "🧪 テストモードで実行"
           npm run scrape test
-        elif [ -n "${{ github.event.inputs.platform }}" ]; then
+        elif [ -n "${{ github.event.inputs.platform }}" ] && [ "${{ github.event.inputs.platform }}" != "all" ]; then
           echo "🎯 単一プラットフォーム実行: ${{ github.event.inputs.platform }}"
           npm run scrape single ${{ github.event.inputs.platform }}
         else
@@ -88,7 +89,7 @@ jobs:
       run: |
         echo "## 📊 スクレイピング実行結果" >> $GITHUB_STEP_SUMMARY
         echo "- 実行日時: $(date)" >> $GITHUB_STEP_SUMMARY
-        echo "- 実行モード: ${{ github.event.inputs.test_mode == 'true' && 'テスト' || github.event.inputs.platform && '単一プラットフォーム' || '全プラットフォーム' }}" >> $GITHUB_STEP_SUMMARY
+        echo "- 実行モード: ${{ github.event.inputs.test_mode == 'true' && 'テスト' || (github.event.inputs.platform && github.event.inputs.platform != 'all' && '単一プラットフォーム') || '全プラットフォーム' }}" >> $GITHUB_STEP_SUMMARY
         if [ -f "raw_data.csv" ]; then
           echo "- 総データ数: $(wc -l < raw_data.csv)" >> $GITHUB_STEP_SUMMARY
         fi

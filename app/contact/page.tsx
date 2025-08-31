@@ -44,7 +44,7 @@ function ContactForm() {
       if (recaptchaElement.innerHTML.trim() === '') {
         try {
           (window as any).grecaptcha.render(recaptchaElement, {
-            sitekey: '6LftNXkrAAAAAPx5h79s1sWUZiOjssmB-bISFKYR'
+            sitekey: process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || '6LftNXkrAAAAAPx5h79s1sWUZiOjssmB-bISFKYR'
           })
         } catch (error) {
           console.error('reCAPTCHA render error:', error)
@@ -335,7 +335,7 @@ function ContactForm() {
 
                 {/* reCAPTCHA */}
                 {recaptchaLoaded && (
-                  <div className="g-recaptcha" data-sitekey="6LftNXkrAAAAAPx5h79s1sWUZiOjssmB-bISFKYR"></div>
+                  <div className="g-recaptcha" data-sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || '6LftNXkrAAAAAPx5h79s1sWUZiOjssmB-bISFKYR'}></div>
                 )}
 
                 <div>

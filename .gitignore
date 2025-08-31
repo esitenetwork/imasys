@@ -23,7 +23,7 @@ yarn-debug.log*
 yarn-error.log*
 
 # local env files
-# .env*.local
+.env*.local
 .env
 
 # vercel
@@ -44,3 +44,32 @@ Thumbs.db
 # その他
 *.log
 .cache/
+
+# セキュリティ - 機密情報ファイル
+# Google Cloud Service Account
+*.json
+!package.json
+!package-lock.json
+!tsconfig.json
+!next.config.json
+!tailwind.config.json
+!postcss.config.json
+!eslint.config.json
+!components.json
+
+# 特定の機密ファイル
+docs/*.json
+*.key
+*.p12
+*.pfx
+*.crt
+*.csr
+
+# idea_db の機密ファイル
+idea_db/config.env
+
+# API Keys and Secrets
+*secret*
+*credential*
+*password*
+*token*
