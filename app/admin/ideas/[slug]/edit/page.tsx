@@ -20,8 +20,6 @@ export default function EditIdeaPage({ params }: Params) {
     title: '',
     category: '',
     tags: '',
-    price_range: '',
-    duration: '',
     source: '',
     status: 'draft',
     slug: '',
@@ -45,8 +43,6 @@ export default function EditIdeaPage({ params }: Params) {
               title: foundIdea.title || '',
               category: foundIdea.category || '',
               tags: foundIdea.tags || '',
-              price_range: foundIdea.price_range || '',
-              duration: foundIdea.duration || '',
               source: foundIdea.source || '',
               status: foundIdea.status || 'draft',
               slug: foundIdea.slug || '',
@@ -83,8 +79,6 @@ export default function EditIdeaPage({ params }: Params) {
         title: parsedData.title || idea.title,
         category: parsedData.category || idea.category,
         tags: parsedData.tags || idea.tags,
-        price_range: parsedData.price || idea.price_range,
-        duration: parsedData.duration || idea.duration,
         source: parsedData.source || idea.source,
         notes: parsedData.description || idea.notes
       })
@@ -117,8 +111,14 @@ export default function EditIdeaPage({ params }: Params) {
       const result = await response.json()
 
       if (!response.ok || !result.success) {
-        console.error('API error:', result)
-        throw new Error(result.error || 'API request failed')
+        console.error('API error details:', {
+          status: response.status,
+          statusText: response.statusText,
+          result: result,
+          error: result.error
+        })
+        const errorMsg = result.error || `API request failed (${response.status}: ${response.statusText})`
+        throw new Error(errorMsg)
       }
 
       console.log('API success:', result)
@@ -144,7 +144,17 @@ export default function EditIdeaPage({ params }: Params) {
 
   return (
     <div className="px-4 sm:px-6 lg:px-8 py-8">
-      <h1 className="text-2xl font-bold mb-6">アイデアを編集</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">アイデアを編集</h1>
+        <button
+          type="button"
+          onClick={() => window.open(`/ideas/${idea.slug}`, '_blank')}
+          disabled={saving}
+          className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50"
+        >
+          表示
+        </button>
+      </div>
       
       <form onSubmit={handleSubmit}>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -183,16 +193,6 @@ export default function EditIdeaPage({ params }: Params) {
                 キャンセル
               </button>
             </div>
-            
-            {saving && (
-              <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded-md">
-                <div className="flex items-center gap-2">
-                  <div className="animate-spin w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full"></div>
-                  <span>API経由で更新中...</span>
-                </div>
-                <div className="mt-2">更新完了後、Google Sheetsに自動同期します</div>
-              </div>
-            )}
           </div>
 
           {/* 右カラム - その他の情報 */}
@@ -261,45 +261,7 @@ export default function EditIdeaPage({ params }: Params) {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  価格帯
-                </label>
-                <select
-                  value={idea.price_range}
-                  onChange={(e) => setIdea({ ...idea, price_range: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                >
-                  <option value="">選択してください</option>
-                  <option value="30万円">30万円</option>
-                  <option value="50万円">50万円</option>
-                  <option value="80万円">80万円</option>
-                  <option value="100万円">100万円</option>
-                  <option value="150万円">150万円</option>
-                  <option value="要相談">要相談</option>
-                </select>
-              </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  構築期間
-                </label>
-                <select
-                  value={idea.duration}
-                  onChange={(e) => setIdea({ ...idea, duration: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                >
-                  <option value="">選択してください</option>
-                  <option value="1週間">1週間</option>
-                  <option value="2週間">2週間</option>
-                  <option value="3週間">3週間</option>
-                  <option value="1ヶ月">1ヶ月</option>
-                  <option value="2ヶ月">2ヶ月</option>
-                  <option value="要相談">要相談</option>
-                </select>
-              </div>
-            </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">

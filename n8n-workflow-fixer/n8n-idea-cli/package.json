@@ -1,0 +1,38 @@
+{
+  "name": "n8n-workflow-fixer",
+  "version": "1.0.0",
+  "description": "CLI tool for n8n workflow management with Claude AI error fixing",
+  "main": "index.js",
+  "bin": {
+    "n8n-fixer": "./index.js"
+  },
+  "scripts": {
+    "start": "node index.js",
+    "web-ui": "node index-web-ui-final.js",
+    "web-ui-debug": "node index-web-ui-final.js --debug",
+    "install-browsers": "npx playwright install chromium",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "test-session": "node test-session-auth.js",
+    "test-api": "node test-api-connection.js"
+  },
+  "keywords": [
+    "n8n",
+    "workflow",
+    "cli",
+    "claude",
+    "automation",
+    "web-ui",
+    "playwright"
+  ],
+  "author": "esitenetwork",
+  "license": "MIT",
+  "dependencies": {
+    "commander": "^11.1.0",
+    "axios": "^1.6.0",
+    "dotenv": "^16.3.1",
+    "playwright": "^1.40.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+} 

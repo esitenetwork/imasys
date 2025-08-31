@@ -7,7 +7,8 @@
     "build": "SKIP_ENV_VALIDATION=true next build",
     "start": "next start",
     "lint": "next lint",
-    "migrate": "tsx scripts/migrate-to-supabase.ts"
+    "migrate": "tsx scripts/migrate-to-supabase.ts",
+    "test-new-db": "tsx scripts/test-new-database.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.1.1",

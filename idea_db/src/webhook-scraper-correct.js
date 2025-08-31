@@ -18,8 +18,8 @@ async function scrapeWebhookIntegrations() {
     console.log('ページの読み込み完了');
 
     // Load Moreボタンのクリック処理
-    let clickCount = 0;
-    const MAX_CLICKS = 100; // 最大600件程度のテンプレートを取得
+                let clickCount = 0;
+            const MAX_CLICKS = 100; // 100回Load Moreで本格実行
     
     console.log('Load Moreボタンの処理を開始します...');
     
@@ -32,10 +32,10 @@ async function scrapeWebhookIntegrations() {
           break;
         }
         
-        await loadMoreButton.click({ timeout: 5000 });
+        await loadMoreButton.click({ timeout: 15000 });
         clickCount++;
         console.log(`Load Moreボタンをクリックしました (${clickCount}/${MAX_CLICKS})`);
-        await page.waitForTimeout(1000);
+        await page.waitForTimeout(5000);
         
         // ネットワークの活動が収まるまで待つ
         try {

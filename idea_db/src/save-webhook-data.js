@@ -19,8 +19,8 @@ async function saveWebhookData() {
     const dataManager = new DataManager();
     
     // データを正規化してCSVに保存
-    const normalizedData = templates.map(template => ({
-      id: dataManager.generateId(),
+    const normalizedData = templates.map((template, index) => ({
+      id: `webhook_${Date.now()}_${index}`,
       platform: 'zapier',
       source_app: template.source_app || 'webhook',
       title: template.title,
@@ -35,7 +35,7 @@ async function saveWebhookData() {
     console.log('💾 CSVファイルに保存中...');
     
     // 既存データを読み込み
-    const existingData = dataManager.loadData();
+    const existingData = await dataManager.loadExistingData() || [];
     console.log(`既存データ数: ${existingData.length}件`);
     
     // 新しいデータを追加
@@ -43,17 +43,24 @@ async function saveWebhookData() {
     console.log(`合計データ数: ${allData.length}件`);
     
     // CSVに保存
-    dataManager.saveToCSV(allData);
+    await dataManager.saveToCSV(allData);
     console.log('✅ CSVファイルに保存完了');
     
-    // Google Sheetsに同期
+    // Google Sheetsに同期（正しい引数で呼び出し）
     console.log('🔄 Google Sheetsに同期中...');
-    await dataManager.syncToGoogleSheets();
+    await dataManager.syncToGoogleSheets(allData, 'raw_data');
     console.log('✅ Google Sheets同期完了');
     
-    // 統計情報を更新
+    // 統計情報を更新（正しい引数で呼び出し）
     console.log('📈 統計情報を更新中...');
-    dataManager.updateStatistics();
+    const platformStats = {
+      zapier: {
+        total: allData.filter(item => item.platform === 'zapier').length,
+        new: normalizedData.length,
+        used: 0
+      }
+    };
+    await dataManager.updateStatistics(platformStats);
     console.log('✅ 統計情報更新完了');
     
     console.log('\n🎉 Webhookデータの保存処理が完了しました！');

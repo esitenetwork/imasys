@@ -1,0 +1,31 @@
+ID,作成日,タイトル,カテゴリ,タグ,元ネタ,ステータス,スラッグ,備考
+1,2025-07-03,Calendly商談フォローアップ自動化システム,営業支援・効率化,"Calendly,商談管理,フォローアップ,CRM連携",Zapier CRM Automation - Calendly follow-up automation,published,calendly-followup-automation,
+2,2025-07-03,顧客メール自動分類システム,カスタマーサポート,"メール管理,AI分類,顧客対応,業務効率化",GitHub awesome-n8n-templates - AI Gmail label automation,published,email-auto-classification,
+3,2025-07-03,Facebook広告リード自動管理システム,マーケティング自動化,"Facebook広告,リード管理,CRM連携,AIスコアリング",Zapier CRM Automation guides - Facebook Lead Ads integration,published,facebook-lead-automation,
+4,2025-07-03,Gmail請求書自動管理システム,経理自動化,"請求書管理,PDF処理,AI-OCR,Google連携",n8n workflow template #3016 - Invoices from Gmail to Drive and Google Sheets,published,gmail-invoice-automation,
+5,2025-07-03,QuickBooks顧客・請求書一括処理システム,会計・経理自動化,"QuickBooks,経理自動化,請求管理,顧客管理",n8n workflow template #949 - Create a customer and send the invoice automatically,published,quickbooks-customer-invoice,
+6,2025-07-03,QuickBooks請求書・経費自動処理システム,経理・経費管理,"QuickBooks,経費精算,OCR,レシート管理",Bannerbear blog - QuickBooks invoice automation workflow,published,quickbooks-expense-automation,
+7,2025-07-03,Google Sheets業務データ自動同期システム,データ管理・連携,"Google Sheets,自動同期,Slack連携,タスク管理",Capsule CRM blog - Google Sheets workflow automations,published,sheets-data-sync-automation,
+8,2025-07-03,Slack業務通知自動化システム,コミュニケーション効率化,"Slack連携,通知自動化,タスク管理,チーム連携",GitHub awesome-n8n-templates - Slack integration section,published,slack-notification-automation,
+9,2025-07-03,Slack営業パイプライン管理システム,営業支援・可視化,"Slack連携,営業管理,パイプライン,CRM連携",Bannerbear blog - HubSpot pipeline automation with Slack,published,slack-pipeline-management,
+10,2025-07-03,Stripe請求書自動発行システム,決済・請求業務,"Stripe連携,請求書自動化,決済連動,PDF生成",n8n workflow template #2675 - Generate Stripe invoice and send it by email,published,stripe-invoice-automation,
+20,2025-07-04,不動産物件調査・AI画像認識システム,製造・生産,"AI活用,画像認識,自動化,不動産管理",n8n #2330 - Property Inventory Survey with Image Recognition,published,real-estate-ai-survey-system,スマートフォンで撮影するだけで、AI画像認識が物件内の設備・備品を自動特定。調査時間を70%短縮し、デジタル台帳で効率的な物件管理を実現。
+22,2025-07-06,歯科医院向け音声申し送りシステム,歯科・医療,"音声入力,申し送り,歯科医院,業務効率化",歯科医院からの業務改善要望,published,dental-voice-memo-system,音声入力で患者申し送りを効率化。手書き書類や棚からの検索作業を撲滅し、診療時間を大幅短縮。スマホ一つで簡単操作。
+30,2025-07-16,AI営業アシスタントシステム,営業・販売,"AI活用,自動化,CRM,データ分析",GitHub,published,ai-sales-assistant-1752666358031,このシステムは、顧客データを分析し、最適な営業戦略を提案するAIアシスタントです。営業チームの効率を向上させ、成約率を高めることが期待されます。
+31,2025-07-16,AI顧客対応システム,カスタマーサポート,"AI活用,自動化",GitHub,published,ai-customer-support-1752666453720,ChatGPT生成アイデア
+36,2025-07-24,AI請求書支払いリマインダーシステム,経理・支払い管理,"請求書,支払いリマインダー",n8n: Invoice Processing Workflow,published,unique-url-slug,請求書支払いの自動化に焦点を当てたシステム
+40,2025-07-25,AI契約書作成支援システム,法務・契約管理,"契約書,文書作成",n8n: Invoice Processing Workflow,published,ai-contract-generation-support-1753454380770,契約書作成プロセスを自動化し、効率化を図る新しいアイデア。
+41,2025-07-25,Slack業務進捗報告自動化システム,お任せ,"コミュニケーション,業務効率化",GitHub: awesome-selfhosted,published,slack-progress-report-automation-2024-07-24-1753454471390,Slack内での業務進捗報告を自動化し、チーム全体の進捗管理を効率化する
+42,2025-07-25,Zoom会議リマインダーシステム,営業支援・効率化,"リマインダー,会議管理",Zapier: Lead Management,published,zoom-meeting-reminder-system-1753454551496,Zoom会議のスケジュール管理と参加者へのリマインダーを自動化することで、効率的な会議運営を支援する。
+43,2025-07-26,AI業務進捗管理システム,業務効率化,"進捗管理,タスク管理",n8n: Invoice Processing Workflow,published,ai-business-progress-management-system-1753488284861,業務の進捗状況をリアルタイムで把握し、タスクの優先順位を自動的に調整するシステム
+44,2025-07-26,AI業務フロー最適化システム,業務効率化,"AI,業務フロー",n8n: Invoice Processing Workflow,published,ai-business-flow-optimization-1753488423739,既存の業務フローを分析し、AIを活用して効率化するシステム
+45,2025-07-26,LinkedInメッセージ自動送信システム,営業支援・効率化,"SNS,自動化",Zapier: Lead Management,published,linkedin-message-automation-2024-07-24-1753488966992,LinkedInのリード管理を効率化するために新規アプローチを提案
+46,2025-07-26,AIメール自動返信システム,カスタマーサポート,"自動化,メール",n8n: Invoice Processing Workflow,published,ai-email-auto-reply-2024-07-24-1753489092881,顧客からの問い合わせに対して、AIが適切な返信を自動生成するシステム
+47,2025-07-26,AI営業リード分析システム,営業支援・分析,"AI,リード分析,営業支援",n8n: Invoice Processing Workflow,published,ai-sales-lead-analysis-system-2024-07-24-1753489967226,営業リードのデータをAIによって分析し、営業チームに貴重なインサイトを提供するシステム
+48,2025-07-26,AI契約書自動生成システム,法務・契約管理,"契約書,自動化",n8n: Invoice Processing Workflow,published,ai-contract-generation-system-1753490074088,契約書作成プロセスを効率化する新しいアイデア
+49,2025-07-26,LinkedInリードフォローアップ自動化システム,営業支援・効率化,"リード管理,自動化",Zapier: Lead Management,published,linkedin-lead-followup-automation-2024-07-24-1753490485879,営業チームがLinkedInで生成されたリードに対して自動的にフォローアップを行うシステム
+50,2025-07-26,Trelloタスク自動割り当てシステム,タスク管理,"効率化,自動化",Zapier: Lead Management,published,trello-task-automation-2024-07-24-1753492997290,営業リードを効率的にタスクに割り当てるためのシステム
+51,2025-07-26,Salesforce顧客データ分析システム,ビジネスインテリジェンス,"顧客データ,分析,Salesforce",GitHub: awesome-selfhosted,published,salesforce-customer-analytics-2024-07-24-1753493501682,Salesforceのデータを分析し、顧客行動の傾向や予測を提供する
+73,2025-07-27,経費精算自動化システム,経理・会計,"自動化,API連携",n8n: Invoice Processing Workflow,published,------------1753582038120-czn9ablso-1753582038125,既存アイデアとの差別化ポイント：経費精算に特化し、レシートや領収書の画像を自動で読み取り、経費精算書の作成や承認フローを自動化するシステム。
+74,2025-07-27,売上管理自動化システム,経理・会計,"自動化,API連携",Zapier: Lead Management,published,------------1753582822186-hpbxxuzwv-1753582822193,既存アイデアとの差別化ポイントは、売上データの取得から分析までを自動化し、売上のトレンドや顧客動向をリアルタイムに把握することが可能。
+75,2025-07-27,請求書自動作成システム,経理・会計,"自動化,API連携",GitHub: awesome-selfhosted,published,------------1753583700726-hczeaife0-1753583700734,既存アイデアとの差別化ポイント：AIを活用して請求書の内容や金額を自動生成し、顧客情報や取引履歴と連携させることで、従来の手作業よりも効率的に請求書を作成できる
