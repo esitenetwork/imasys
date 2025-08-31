@@ -13,8 +13,6 @@ export default function NewIdeaPage() {
     title: '',
     category: '',
     tags: '',
-    price_range: '',
-    duration: '',
     source: '',
     status: 'draft',
     slug: '',
@@ -52,8 +50,6 @@ export default function NewIdeaPage() {
         title: parsedData.title || idea.title,
         category: parsedData.category || idea.category,
         tags: parsedData.tags || idea.tags,
-        price_range: parsedData.price || idea.price_range,
-        duration: parsedData.duration || idea.duration,
         source: parsedData.source || idea.source,
         slug: parsedData.slug || (parsedData.title ? generateSlugFromTitle(parsedData.title) : idea.slug),
         notes: parsedData.description || idea.notes
@@ -81,8 +77,6 @@ export default function NewIdeaPage() {
         title: idea.title,
         category: idea.category,
         tags: idea.tags,
-        price_range: idea.price_range,
-        duration: idea.duration,
         source: idea.source,
         status: status,
         slug: idea.slug,
@@ -95,8 +89,6 @@ export default function NewIdeaPage() {
         title: idea.title,
         category: idea.category,
         tags: idea.tags,
-        price_range: idea.price_range,
-        duration: idea.duration,
         source: idea.source,
         status: status,
         slug: idea.slug,
@@ -163,8 +155,6 @@ title: "アイデアのタイトル"
 description: "システムの説明"
 category: "カテゴリ"
 tags: ["タグ1", "タグ2"]
-price: "50万円"
-duration: "構築期間 2週間"
 source: "n8n #949"
 ---
 
@@ -275,45 +265,7 @@ source: "n8n #949"
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                価格帯
-              </label>
-              <select
-                value={idea.price_range}
-                onChange={(e) => setIdea({ ...idea, price_range: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md"
-              >
-                <option value="">選択してください</option>
-                <option value="30万円">30万円</option>
-                <option value="50万円">50万円</option>
-                <option value="80万円">80万円</option>
-                <option value="100万円">100万円</option>
-                <option value="150万円">150万円</option>
-                <option value="要相談">要相談</option>
-              </select>
-            </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                構築期間
-              </label>
-              <select
-                value={idea.duration}
-                onChange={(e) => setIdea({ ...idea, duration: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md"
-              >
-                <option value="">選択してください</option>
-                <option value="1週間">1週間</option>
-                <option value="2週間">2週間</option>
-                <option value="3週間">3週間</option>
-                <option value="1ヶ月">1ヶ月</option>
-                <option value="2ヶ月">2ヶ月</option>
-                <option value="要相談">要相談</option>
-              </select>
-            </div>
-          </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">

@@ -1,9 +1,17 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { getIdeasFromSheet } from '@/lib/googleSheets';
 
-// GET: アイデア一覧を取得
+// GET: アイデア一覧を取得（Google Sheets IDも含む）
 export async function GET() {
   try {
+    if (!supabaseAdmin) {
+      return NextResponse.json(
+        { error: 'Supabase admin client not available', success: false },
+        { status: 500 }
+      );
+    }
+
     const { data: ideas, error } = await supabaseAdmin
       .from('ideas')
       .select('*')
@@ -17,9 +25,46 @@ export async function GET() {
       );
     }
 
+    // Google SheetsからIDを取得
+    let sheetsData: any[] = [];
+    try {
+      sheetsData = await getIdeasFromSheet();
+      console.log('Google Sheets data fetched:', sheetsData.length, 'items');
+      console.log('First Google Sheets item:', sheetsData[0]);
+      console.log('All Google Sheets data:', sheetsData);
+    } catch (sheetsError) {
+      console.warn('Could not fetch Google Sheets data:', sheetsError);
+    }
+
+    // Google Sheetsのデータをslugでマッピング
+    const sheetsMap = new Map();
+    sheetsData.forEach((sheetItem: any) => {
+      if (sheetItem.slug) {
+        sheetsMap.set(sheetItem.slug, sheetItem);
+        console.log('Mapped slug:', sheetItem.slug, 'to ID:', sheetItem.id);
+      }
+    });
+    console.log('Google Sheets mapping created:', sheetsMap.size, 'items');
+    console.log('Available slugs in sheets:', Array.from(sheetsMap.keys()));
+
+    // SupabaseのデータにGoogle Sheets IDを追加
+    const ideasWithSheetsId = (ideas || []).map((idea: any) => {
+      const sheetsItem = sheetsMap.get(idea.slug);
+      console.log('Looking for slug:', idea.slug, 'Found:', sheetsItem?.id || 'NOT FOUND');
+      return {
+        ...idea,
+        sheets_id: sheetsItem?.id || null
+      };
+    });
+    console.log('Ideas with Sheets ID:', ideasWithSheetsId.map((idea: any) => ({
+      slug: idea.slug,
+      sheets_id: idea.sheets_id,
+      created_at: idea.created_at
+    })));
+
     return NextResponse.json({
       success: true,
-      ideas: ideas || []
+      ideas: ideasWithSheetsId
     });
 
   } catch (error) {
@@ -34,6 +79,13 @@ export async function GET() {
 // PUT: アイデアを更新
 export async function PUT(request: Request) {
   try {
+    if (!supabaseAdmin) {
+      return NextResponse.json(
+        { error: 'Supabase admin client not available', success: false },
+        { status: 500 }
+      );
+    }
+
     const body = await request.json();
     
     console.log('API: Updating idea with data:', body);
@@ -46,13 +98,11 @@ export async function PUT(request: Request) {
       );
     }
 
-    // Supabaseでアイデアを更新
+    // Supabaseでアイデアを更新（存在しないカラムを除外）
     const updateData = {
       title: body.title,
       category: body.category || null,
       tags: body.tags || null,
-      price_range: body.price_range || null,
-      duration: body.duration || null,
       source: body.source || null,
       status: body.status || 'draft',
       notes: body.notes || null,
@@ -102,6 +152,13 @@ export async function PUT(request: Request) {
 // POST: 新しいアイデアを追加
 export async function POST(request: Request) {
   try {
+    if (!supabaseAdmin) {
+      return NextResponse.json(
+        { error: 'Supabase admin client not available', success: false },
+        { status: 500 }
+      );
+    }
+
     const body = await request.json();
     
     console.log('API: Received data:', body);
@@ -136,13 +193,11 @@ export async function POST(request: Request) {
       );
     }
 
-    // Supabaseにアイデアを保存
+    // Supabaseにアイデアを保存（存在しないカラムを除外）
     const insertData = {
       title: body.title,
       category: body.category || null,
       tags: body.tags || null,
-      price_range: body.price_range || null,
-      duration: body.duration || null,
       source: body.source || null,
       status: body.status || 'draft',
       slug: body.slug,

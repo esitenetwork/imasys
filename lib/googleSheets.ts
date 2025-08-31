@@ -12,15 +12,13 @@ const auth = new google.auth.GoogleAuth({
 const sheets = google.sheets({ version: 'v4', auth });
 const SPREADSHEET_ID = process.env.GOOGLE_SHEETS_ID;
 
-// アイデアの型定義
+// アイデアの型定義（価格・期間フィールド削除）
 export interface IdeaRow {
   id: string;
   createdAt: string;
   title: string;
   category: string;
   tags: string;
-  priceRange: string;
-  duration: string;
   source: string;
   status: string;
   slug: string;
@@ -32,7 +30,7 @@ export async function getIdeasFromSheet(): Promise<IdeaRow[]> {
   try {
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId: SPREADSHEET_ID,
-      range: 'A2:K', // ヘッダー行をスキップ
+      range: 'A2:I', // ヘッダー行をスキップ
     });
 
     const rows = response.data.values || [];
@@ -43,12 +41,10 @@ export async function getIdeasFromSheet(): Promise<IdeaRow[]> {
       title: row[2] || '',
       category: row[3] || '',
       tags: row[4] || '',
-      priceRange: row[5] || '',
-      duration: row[6] || '',
-      source: row[7] || '',
-      status: row[8] || '',
-      slug: row[9] || '',
-      notes: row[10] || '',
+      source: row[5] || '',
+      status: row[6] || '',
+      slug: row[7] || '',
+      notes: row[8] || '',
     }));
   } catch (error) {
     console.error('Error fetching data from Google Sheets:', error);
@@ -74,8 +70,6 @@ export async function addIdeaToSheet(idea: Omit<IdeaRow, 'id' | 'createdAt'>): P
       idea.title,
       idea.category,
       idea.tags,
-      idea.priceRange,
-      idea.duration,
       idea.source,
       idea.status,
       idea.slug,
@@ -84,7 +78,7 @@ export async function addIdeaToSheet(idea: Omit<IdeaRow, 'id' | 'createdAt'>): P
 
     await sheets.spreadsheets.values.append({
       spreadsheetId: SPREADSHEET_ID,
-      range: 'A:K',
+      range: 'A:I',
       valueInputOption: 'USER_ENTERED',
       requestBody: {
         values: [newRow],
@@ -125,8 +119,6 @@ export async function updateIdeaInSheet(id: string, updates: Partial<IdeaRow>): 
       updatedIdea.title,
       updatedIdea.category,
       updatedIdea.tags,
-      updatedIdea.priceRange,
-      updatedIdea.duration,
       updatedIdea.source,
       updatedIdea.status,
       updatedIdea.slug,
@@ -135,7 +127,7 @@ export async function updateIdeaInSheet(id: string, updates: Partial<IdeaRow>): 
 
     await sheets.spreadsheets.values.update({
       spreadsheetId: SPREADSHEET_ID,
-      range: `A${rowNumber}:K${rowNumber}`,
+      range: `A${rowNumber}:I${rowNumber}`,
       valueInputOption: 'USER_ENTERED',
       requestBody: {
         values: [updatedRow],

@@ -1,0 +1,116 @@
+name: イマシス アイデア収集システム
+
+on:
+  # 月次実行（毎月1日の午前2時）
+  schedule:
+    - cron: '0 2 1 * *'
+  
+  # 手動実行
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: '実行するプラットフォーム（空白で全プラットフォーム）'
+        required: false
+        type: choice
+        options:
+          - ''
+          - 'n8n'
+          - 'zapier'
+          - 'make'
+          - 'powerAutomate'
+          - 'awesomeSelfhosted'
+          - 'awesomeN8n'
+          - 'ifttt'
+          - 'airtable'
+      test_mode:
+        description: 'テストモード（データ保存なし）'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  scraping:
+    runs-on: ubuntu-latest
+    
+    env:
+      GOOGLE_SHEETS_ID: ${{ secrets.GOOGLE_SHEETS_ID }}
+      GOOGLE_SERVICE_ACCOUNT_EMAIL: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_EMAIL }}
+      GOOGLE_PRIVATE_KEY: ${{ secrets.GOOGLE_PRIVATE_KEY }}
+      DEBUG_MODE: true
+      LOG_LEVEL: info
+
+    steps:
+    - name: チェックアウト
+      uses: actions/checkout@v4
+      
+    - name: Node.js セットアップ
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: idea_db/package-lock.json
+        
+    - name: 依存関係インストール
+      working-directory: ./idea_db
+      run: npm ci
+      
+    - name: Playwright ブラウザインストール
+      working-directory: ./idea_db
+      run: npx playwright install chromium
+      
+    - name: スクレイピング実行
+      working-directory: ./idea_db
+      run: |
+        if [ "${{ github.event.inputs.test_mode }}" == "true" ]; then
+          echo "🧪 テストモードで実行"
+          npm run scrape test
+        elif [ -n "${{ github.event.inputs.platform }}" ]; then
+          echo "🎯 単一プラットフォーム実行: ${{ github.event.inputs.platform }}"
+          npm run scrape single ${{ github.event.inputs.platform }}
+        else
+          echo "🚀 全プラットフォーム実行"
+          npm start
+        fi
+      
+    - name: 結果ファイルの保存
+      if: success()
+      uses: actions/upload-artifact@v4
+      with:
+        name: scraping-results-${{ github.run_number }}
+        path: |
+          idea_db/raw_data.csv
+          idea_db/statistics.csv
+        retention-days: 30
+        
+    - name: 実行サマリー作成
+      if: always()
+      working-directory: ./idea_db
+      run: |
+        echo "## 📊 スクレイピング実行結果" >> $GITHUB_STEP_SUMMARY
+        echo "- 実行日時: $(date)" >> $GITHUB_STEP_SUMMARY
+        echo "- 実行モード: ${{ github.event.inputs.test_mode == 'true' && 'テスト' || github.event.inputs.platform && '単一プラットフォーム' || '全プラットフォーム' }}" >> $GITHUB_STEP_SUMMARY
+        if [ -f "raw_data.csv" ]; then
+          echo "- 総データ数: $(wc -l < raw_data.csv)" >> $GITHUB_STEP_SUMMARY
+        fi
+        if [ -f "statistics.csv" ]; then
+          echo "### 📈 プラットフォーム別統計" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cat statistics.csv >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+        fi
+
+  notify:
+    needs: scraping
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+    - name: 実行結果通知
+      if: success()
+      run: |
+        echo "✅ スクレイピングが正常に完了しました"
+        
+    - name: エラー通知
+      if: failure()
+      run: |
+        echo "❌ スクレイピングでエラーが発生しました" 

@@ -8,10 +8,9 @@ type IdeaCardProps = {
   description: string
   category: string
   tags: string[]
-  price: string
 }
 
-export default function IdeaCard({ slug, title, description, category, tags, price }: IdeaCardProps) {
+export default function IdeaCard({ slug, title, description, category, tags }: IdeaCardProps) {
   // 表示するタグ数を制限
   const maxTagsToShow = 2
   const visibleTags = tags.slice(0, maxTagsToShow)
@@ -24,9 +23,6 @@ export default function IdeaCard({ slug, title, description, category, tags, pri
           <div className="flex justify-between items-start mb-2">
             <Badge variant="secondary" className="bg-primary/20 text-primary hover:bg-primary/30 border-primary/30">
               {category}
-            </Badge>
-            <Badge variant="outline" className="text-emerald-700 border-emerald-600 bg-emerald-50 hover:bg-emerald-100">
-              導入費用 {price}
             </Badge>
           </div>
           <CardTitle className="text-lg leading-tight group-hover:text-primary transition-colors line-clamp-1" title={title}>

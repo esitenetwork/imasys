@@ -27,7 +27,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   return {
     title: `${idea.title}｜AI活用システム開発事例 - IMASYS`,
-    description: `${idea.description} 構築期間${idea.duration}、価格${idea.price}でご提供。「こんなシステムが簡単に作れるようになった」を実証する具体的なアイデア事例です。無料相談受付中。`,
+    description: `${idea.description} 「こんなシステムが簡単に作れるようになった」を実証する具体的なアイデア事例です。無料相談受付中。`,
     keywords: [
       idea.title,
       idea.category,
@@ -132,18 +132,9 @@ export default async function IdeaDetailPage({ params }: Props) {
             "category": idea.category,
             "offers": {
               "@type": "Offer",
-              "price": idea.price.replace(/[^\d]/g, ''),
-              "priceCurrency": "JPY",
               "availability": "https://schema.org/InStock",
               "priceValidUntil": new Date(Date.now() + 365*24*60*60*1000).toISOString().split('T')[0]
-            },
-            "additionalProperty": [
-              {
-                "@type": "PropertyValue",
-                "name": "構築期間",
-                "value": idea.duration
-              }
-            ]
+            }
           })
         }}
       />
@@ -160,7 +151,6 @@ export default async function IdeaDetailPage({ params }: Props) {
                 <span className="inline-block bg-blue-600 text-white text-sm font-medium px-4 py-2 rounded-full">
                   {idea.category}
                 </span>
-                <span className="text-2xl font-bold text-green-600">導入費用 {idea.price}</span>
               </div>
               
               <h1 className="text-4xl font-bold text-gray-900 mb-4 leading-tight">{idea.title}</h1>
@@ -174,12 +164,7 @@ export default async function IdeaDetailPage({ params }: Props) {
                 ))}
               </div>
               
-              <div className="inline-flex items-center bg-green-100 text-green-800 text-sm font-medium px-4 py-2 rounded-full">
-                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                構築期間: {idea.duration}
-              </div>
+
             </div>
           </div>
         </div>

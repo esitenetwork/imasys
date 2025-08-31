@@ -1,0 +1,38 @@
+{
+  "name": "imasys-idea-scraper",
+  "version": "1.0.0",
+  "description": "イマシス アイデア収集システム - 8つのプラットフォームから自動化テンプレートを収集",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "scrape": "node src/scraper.js",
+    "scrape-zapier": "node -e \"const MainScraper = require('./src/scraper'); new MainScraper().runZapierOnly()\"",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "setup": "npm install && node src/setup.js"
+  },
+  "keywords": [
+    "scraping",
+    "automation",
+    "n8n",
+    "zapier",
+    "make",
+    "playwright"
+  ],
+  "author": "イマシス",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.6.0",
+    "cheerio": "^1.0.0-rc.12",
+    "csv-parser": "^3.0.0",
+    "csv-writer": "^1.6.0",
+    "dotenv": "^16.3.0",
+    "googleapis": "^128.0.0",
+    "moment": "^2.29.4",
+    "playwright": "^1.40.0",
+    "playwright-extra": "^4.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0"
+  }
+}

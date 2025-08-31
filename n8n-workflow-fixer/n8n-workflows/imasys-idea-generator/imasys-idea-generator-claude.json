@@ -1,0 +1,403 @@
+{
+  "name": "イマシスアイデア発掘システム（最適化版）",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "imasys-idea-generator",
+        "responseMode": "responseNode",
+        "responseData": "allEntries"
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.all()[0].json;\n\nreturn [{\n  json: {\n    source_type: input.data?.source_type || \"お任せ（人気ソースから自動選択）\",\n    category_preference: input.data?.category_preference || \"お任せ（AI自動選択）\",\n    quality_level: input.data?.quality_level || \"お任せ（標準品質）\",\n    generation_count: input.data?.generation_count || 1\n  }\n}];"
+      },
+      "id": "parse-parameters",
+      "name": "Parse Parameters",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [200, 0]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "12zYI6DhYg1Yw6xCw2cbBifwFu4_iMsql9DuNMXPN4DI",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "ideas",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/12zYI6DhYg1Yw6xCw2cbBifwFu4_iMsql9DuNMXPN4DI/edit#gid=0"
+        }
+      },
+      "id": "google-sheets",
+      "name": "Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [400, 0],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "HZIJgbO3jgkvv7fB",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const params = $node[\"Parse Parameters\"].json;\nconst allData = $input.all();\n\n// Phase 1: カテゴリフィルタリング\nconst categoryFilter = params.category_preference;\nconst filteredByCategory = categoryFilter === \"お任せ（AI自動選択）\" \n  ? allData \n  : allData.filter(item => item.json.カテゴリ === categoryFilter);\n\n// Phase 2: キーワード抽出（既存タイトルから）\nconst existingTitles = filteredByCategory.map(item => item.json.タイトル);\nconst keywords = extractKeywords(existingTitles);\n\n// Phase 3: 発掘場所選択\nconst sourceType = params.source_type;\nconst selectedSource = selectSource(sourceType);\n\nreturn [{\n  json: {\n    filteredData: filteredByCategory.slice(0, 50), // 最大50件に制限\n    keywords: keywords,\n    selectedSource: selectedSource,\n    categoryFilter: categoryFilter,\n    totalCount: allData.length,\n    filteredCount: filteredByCategory.length\n  }\n}];\n\nfunction extractKeywords(titles) {\n  const commonWords = ['自動化', 'システム', '管理', '効率化', 'AI', 'CRM', 'API'];\n  const keywordCount = {};\n  \n  titles.forEach(title => {\n    commonWords.forEach(word => {\n      if (title.includes(word)) {\n        keywordCount[word] = (keywordCount[word] || 0) + 1;\n      }\n    });\n  });\n  \n  return Object.keys(keywordCount).filter(key => keywordCount[key] > 2);\n}\n\nfunction selectSource(sourceType) {\n  const sources = {\n    \"お任せ（人気ソースから自動選択）\": [\n      'GitHub: awesome-selfhosted',\n      'n8n: Invoice Processing Workflow',\n      'Zapier: Lead Management'\n    ],\n    \"GitHub人気リポジトリ限定\": [\n      'GitHub: awesome-selfhosted',\n      'GitHub: n8n-nodes'\n    ]\n  };\n  \n  const availableSources = sources[sourceType] || sources[\"お任せ（人気ソースから自動選択）\"];\n  return availableSources[Math.floor(Math.random() * availableSources.length)];\n}"
+      },
+      "id": "efficient-filter",
+      "name": "Efficient Filter",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [600, 0]
+    },
+    {
+      "parameters": {
+        "resource": "chat",
+        "operation": "complete",
+        "chatModel": "gpt-4o-mini",
+        "prompt": {
+          "messages": [
+            {
+              "role": "user",
+              "content": "={{ \"【重要】以下のGoogle Sheetsの既存データを確認して、重複しない新しいAI業務改善システムのアイデアを1個生成してください。\\n\\n【既存アイデア一覧】\\n\" + JSON.stringify($node[\"Efficient Filter\"].json.filteredData.map(item => ({ title: item.json.タイトル, category: item.json.カテゴリ, source: item.json['元ネタ'] })), null, 2) + \"\\n\\n【重複チェック必須】\\n- 上記のタイトルと類似していないこと\\n- 同じカテゴリで類似の課題解決をしていないこと\\n- 元ネタ（source）が被っていないこと\\n\\n【指定発掘場所】\\n\" + $node[\"Efficient Filter\"].json.selectedSource + \"から着想を得てください\\n\\n【カテゴリ指定】\\n\" + $node[\"Efficient Filter\"].json.categoryFilter + \"\\n(お任せの場合は自動選択)\\n\\n【必須条件】\\n- 日本の中小企業の具体的課題解決\\n- 既存APIやツールで実現可能\\n- 上記既存データと明確に差別化されたアイデア\\n\\n以下のJSON形式で日本語回答:\\n{\\\"title\\\": \\\"○○自動化システム\\\", \\\"category\\\": \\\"経理・会計\\\", \\\"tags\\\": [\\\"自動化\\\", \\\"API連携\\\"], \\\"price_range\\\": \\\"初期費用 30万円〜\\\", \\\"duration\\\": \\\"構築期間 2週間\\\", \\\"source\\\": \\\"\" + $node[\"Efficient Filter\"].json.selectedSource + \"\\\", \\\"slug\\\": \\\"unique-url-slug\\\", \\\"notes\\\": \\\"既存アイデアとの差別化ポイント\\\"}\" }}"
+            }
+          ]
+        },
+        "options": {
+          "maxTokens": 1000,
+          "temperature": 0.7
+        }
+      },
+      "id": "chatgpt-api",
+      "name": "ChatGPT API",
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1,
+      "position": [800, 0],
+      "credentials": {
+        "openAiApi": {
+          "id": "openai-credentials",
+          "name": "OpenAI API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const inputData = $input.all();\nif (!inputData || inputData.length === 0) {\n  throw new Error('ChatGPT APIからの入力データがありません');\n}\n\nconst response = inputData[0].json;\nconsole.log('ChatGPT API response:', JSON.stringify(response, null, 2));\n\n// JSONレスポンスを解析\ntry {\n  let parsedData;\n  \n  // ChatGPT APIのレスポンス形式に対応\n  if (response.message && response.message.content) {\n    // message.contentからJSONを抽出\n    const content = response.message.content;\n    const jsonMatch = content.match(/\\{[\\s\\S]*\\}/);\n    if (jsonMatch) {\n      parsedData = JSON.parse(jsonMatch[0]);\n    } else {\n      throw new Error('message.contentからJSONが見つかりません');\n    }\n  } else if (typeof response === 'string') {\n    // 文字列からJSONを抽出\n    const jsonMatch = response.match(/\\{[\\s\\S]*\\}/);\n    if (jsonMatch) {\n      parsedData = JSON.parse(jsonMatch[0]);\n    } else {\n      throw new Error('JSONが見つかりません');\n    }\n  } else {\n    parsedData = response;\n  }\n  \n  // 必須フィールドの検証\n  if (!parsedData.title) {\n    console.error('解析されたデータ:', parsedData);\n    throw new Error('titleフィールドが見つかりません。レスポンス: ' + JSON.stringify(response));\n  }\n  \n  return [{\n    json: {\n      title: parsedData.title,\n      category: parsedData.category || \"未分類\",\n      tags: Array.isArray(parsedData.tags) ? parsedData.tags : [parsedData.tags || \"AI\"],\n      source: parsedData.source || \"AI生成\",\n      slug: parsedData.slug && parsedData.slug !== 'unique-url-slug' ? parsedData.slug : parsedData.title.toLowerCase().replace(/[^a-z0-9]/g, '-') + '-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9),\n      notes: parsedData.notes || \"AIによる自動生成\"\n    }\n  }];\n} catch (error) {\n  console.error('JSON解析エラー:', error);\n  console.error('元のレスポンス:', response);\n  throw new Error('ChatGPT APIのレスポンスを解析できません: ' + error.message);\n}"
+      },
+      "id": "parse-and-check",
+      "name": "Parse and Check",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1000, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "// 現在のタイムスタンプをIDとして使用\nconst id = Date.now();\n\n// アイデアデータを取得\nconst idea = $node[\"Parse and Check\"].json;\n\n// slugにIDを含める\nconst baseSlug = idea.slug || idea.title.toLowerCase().replace(/[^a-z0-9]/g, '-');\nconst slugWithId = baseSlug + '-' + id;\n\nreturn [{\n  json: {\n    ...idea,\n    id: id,\n    slug: slugWithId\n  }\n}];"
+      },
+      "id": "generate-id",
+      "name": "Generate ID",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [0, 200]
+    },
+    {
+      "parameters": {
+        "jsCode": "// 現在の日時を取得\nconst now = new Date();\nconst dateString = now.toISOString().split('T')[0]; // YYYY-MM-DD形式\n\nreturn [{\n  json: {\n    date: dateString\n  }\n}];"
+      },
+      "id": "generate-date",
+      "name": "Generate Date",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [200, 200]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "={{ $env.CLAUDE_API_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"model\": \"claude-3-5-sonnet-20241022\",\n  \"max_tokens\": 4000,\n  \"temperature\": 0.7,\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"以下のシステムについて、中小企業の経営者・担当者向けにカジュアルで訴求力のあるMDXコンテンツを作成してください。\\n\\n【システム情報】\\nタイトル: {{ $node[\\\"Parse and Check\\\"].json.title }}\\n説明: {{ $node[\\\"Parse and Check\\\"].json.notes }}\\nカテゴリ: {{ $node[\\\"Parse and Check\\\"].json.category }}\\n元ネタ: {{ $node[\\\"Parse and Check\\\"].json.source }}\\n\\n【重要な指示】\\n1. 冒頭は読者の「あるある」な悩みから始める\\n2. 専門用語は避け、話し言葉で書く\\n3. 機能の羅列ではなく「できること」「解決できる悩み」を中心に説明\\n4. Before/Afterで具体的な変化を示す\\n5. 導入事例には必ず具体的な数字を入れる\\n6. 一般的なDX論ではなく、このシステム固有の価値を説明\\n7. 絵文字は使用しない\\n\\n【必須構成と目安文字数】\\n1. 導入部（300文字）\\n   - 共感を呼ぶ悩みから始める\\n   - 「もう○○で悩むのは終わりにしませんか？」のような問いかけ\\n\\n2. こんなお悩みありませんか？（300文字）\\n   - 5つの具体的な悩みをリスト形式で\\n   - 読者が「それ、うちのことだ！」と思う内容\\n\\n3. 解決策の提示（400文字）\\n   - このシステムで何が変わるのかを明確に\\n   - 専門用語を使わず、効果を中心に説明\\n\\n4. 主な機能（600文字）\\n   - 4つの主要機能を紹介\\n   - 各機能は「何ができるか」を中心に説明\\n   - 技術的な説明は最小限に\\n\\n5. 導入効果（400文字）\\n   - Before/After形式で記載\\n   - 具体的な数字（％、時間、金額）を必ず含める\\n   - 3つ以上の効果を列挙\\n\\n6. 導入事例（400文字）\\n   - 2社の事例を紹介\\n   - 業種、規模、課題、導入効果を具体的に\\n   - 必ず数値での成果を含める\\n\\n7. 連携可能なツール（200文字）\\n   - 主要な連携先を箇条書きで\\n   - カテゴリ別に整理\\n\\n8. よくある質問（300文字）\\n   - 3つのQ&Aを記載\\n   - 実際に聞かれそうな質問を選ぶ\\n\\n9. 導入の流れ（200文字）\\n   - 4-5ステップで簡潔に\\n   - 各ステップの期間も明記\\n\\n10. まとめ（200文字）\\n    - 行動を促す締めくくり\\n    - 問い合わせへの誘導\\n\\n【文体・トーン】\\n- 「です・ます」調で統一\\n- 読者に語りかけるような親しみやすい文体\\n- 「！」「？」を効果的に使用（使いすぎない）\\n- カジュアルだが、ビジネスとしての信頼感は保つ\\n\\n【避けるべき表現】\\n- 「最適化」「効率化」「DX」などの抽象的な言葉\\n- 「革新的」「画期的」などの大げさな表現\\n- 機能名の羅列\\n- 技術仕様の詳細\\n\\n【良い例と悪い例】\\n良い例：「なんでこのお客さん、急に離れちゃったんだろう...」\\n悪い例：「顧客離脱要因の分析が困難」\\n\\n良い例：「レシート撮影したら、あとは全部おまかせ！」\\n悪い例：「OCR技術による自動データ取得機能」\\n\\n全体で3,000文字程度（実際は2,000文字程度になることを想定）で、読者が最後まで飽きずに読める内容にしてください。\"\n    }\n  ]\n}",
+        "timeout": 120000
+      },
+      "id": "claude-api",
+      "name": "Claude API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [400, 200]
+    },
+    {
+      "parameters": {
+        "jsCode": "const inputData = $input.all();\nif (!inputData || inputData.length === 0) {\n  throw new Error('Claude APIからの入力データがありません');\n}\n\nconst response = inputData[0].json;\nconsole.log('Claude API response:', JSON.stringify(response, null, 2));\n\n// Claude APIのレスポンスからMDXコンテンツを抽出\ntry {\n  let mdxContent;\n  \n  if (response.content && Array.isArray(response.content)) {\n    // Claude API v3形式\n    mdxContent = response.content[0].text;\n  } else if (response.text) {\n    // 直接テキスト形式\n    mdxContent = response.text;\n  } else if (typeof response === 'string') {\n    // 文字列形式\n    mdxContent = response;\n  } else {\n    throw new Error('MDXコンテンツが見つかりません');\n  }\n  \n  // アイデアデータを取得\n  const idea = $node[\"Parse and Check\"].json;\n  \n  return [{\n    json: {\n      ...idea,\n      mdx_content: mdxContent\n    }\n  }];\n} catch (error) {\n  console.error('MDX解析エラー:', error);\n  throw new Error('Claude APIのレスポンスを解析できません: ' + error.message);\n}"
+      },
+      "id": "parse-claude",
+      "name": "Parse Claude",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [600, 200]
+    },
+    {
+      "parameters": {
+        "resource": "row",
+        "operation": "create",
+        "tableId": "ideas",
+        "dataToSend": "defineBelow",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "title",
+              "fieldValue": "={{ $node[\"Parse and Check\"].json.title }}"
+            },
+            {
+              "fieldId": "category",
+              "fieldValue": "={{ $node[\"Parse and Check\"].json.category }}"
+            },
+            {
+              "fieldId": "tags",
+              "fieldValue": "={{ $node[\"Parse and Check\"].json.tags.join(',') }}"
+            },
+            {
+              "fieldId": "source",
+              "fieldValue": "={{ $node[\"Parse and Check\"].json.source }}"
+            },
+            {
+              "fieldId": "slug",
+              "fieldValue": "={{ $node[\"Generate ID\"].json.slug }}"
+            },
+            {
+              "fieldId": "notes",
+              "fieldValue": "={{ $node[\"Parse and Check\"].json.notes }}"
+            },
+            {
+              "fieldId": "mdx_content",
+              "fieldValue": "={{ $node[\"Parse Claude\"].json.mdx_content }}"
+            },
+            {
+              "fieldId": "status",
+              "fieldValue": "published"
+            }
+          ]
+        }
+      },
+      "id": "save-supabase",
+      "name": "Save to Supabase",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [800, 200],
+      "credentials": {
+        "supabaseApi": {
+          "id": "supabase-credentials",
+          "name": "Supabase API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Google Sheetsの日本語列名に合わせてデータを準備\nconst idea = $node[\"Parse and Check\"].json;\nconst supabaseResult = $node[\"Save to Supabase\"].json;\nconst supabaseId = supabaseResult.id;\nconst date = $node[\"Generate Date\"].json.date;\n\nreturn [{\n  json: {\n    \"ID\": supabaseId,\n    \"作成日\": date,\n    \"タイトル\": idea.title,\n    \"カテゴリ\": idea.category,\n    \"タグ\": idea.tags.join(', '),\n    \"元ネタ\": idea.source,\n    \"ステータス\": 'published',\n    \"スラッグ\": $node[\"Generate ID\"].json.slug,\n    \"備考\": idea.notes || ''\n  }\n}];"
+      },
+      "id": "format-for-sheets",
+      "name": "Format for Sheets",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1000, 200]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "12zYI6DhYg1Yw6xCw2cbBifwFu4_iMsql9DuNMXPN4DI",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "ideas",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/12zYI6DhYg1Yw6xCw2cbBifwFu4_iMsql9DuNMXPN4DI/edit#gid=0"
+        },
+        "resource": "sheet",
+        "operation": "append",
+        "columns": {
+          "mappingMode": "autoMapInputData"
+        }
+      },
+      "id": "google-sheets-append",
+      "name": "Google Sheets Append",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [1200, 200],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "HZIJgbO3jgkvv7fB",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Parse Parameters",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Parameters": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets": {
+      "main": [
+        [
+          {
+            "node": "Efficient Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Efficient Filter": {
+      "main": [
+        [
+          {
+            "node": "ChatGPT API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ChatGPT API": {
+      "main": [
+        [
+          {
+            "node": "Parse and Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse and Check": {
+      "main": [
+        [
+          {
+            "node": "Generate ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate ID": {
+      "main": [
+        [
+          {
+            "node": "Generate Date",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Date": {
+      "main": [
+        [
+          {
+            "node": "Claude API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claude API": {
+      "main": [
+        [
+          {
+            "node": "Parse Claude",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Claude": {
+      "main": [
+        [
+          {
+            "node": "Save to Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save to Supabase": {
+      "main": [
+        [
+          {
+            "node": "Format for Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format for Sheets": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets Append",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1"
+} 
